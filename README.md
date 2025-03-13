@@ -18,7 +18,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
   - Verifies that required variables (`USER_NAME` and `USER_PASSWORD`) are provided.
   - Creates a new user with the specified credentials.
   - Grants the new user sudo privileges.
-  - Sets up the user's home and **[SSH](https://www.openssh.com/manual.html)** directory.
+  - **Implements a workaround for stuck [SSH](https://www.openssh.com/manual.html) connections** by modifying PAM session settings and restarting the [SSH](https://www.openssh.com/manual.html) daemon if necessary.
 
 - **install-2.sh** (to be run as the newly created user):  
   - Validates that the operating system is **[Debian](https://www.debian.org/releases/bookworm/installmanual)**.

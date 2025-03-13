@@ -23,6 +23,9 @@ fi
 ##### [ Create new user ] #################################################
 echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
 echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
-mkdir -p "/home/${USER_NAME}"
-mkdir -m 0700 "/home/${USER_NAME}/.ssh"
-chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
+
+##### [ WORKAROUND: stuck SSH connections ] ###############################
+if [ ! -f /sys/class/tty/tty0/active ]; then
+  sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
+  systemctl restart sshd
+fi
