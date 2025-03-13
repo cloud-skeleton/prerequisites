@@ -60,8 +60,5 @@ COMMIT
 RULES
 sudo ufw reload
 
-##### [ Remove .env file ] #################################################
-rm -f .env
-
 ##### [ Reboot system ] ####################################################
 sudo reboot
