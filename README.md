@@ -37,7 +37,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     ```sh
     apt update
     apt install -y git git-lfs
-    git clone git@github.com:cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
+    git clone https://github.com/cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
     ```
     ```sh
     cat << ENV > /tmp/cloud-skeleton-prerequisites/.env
