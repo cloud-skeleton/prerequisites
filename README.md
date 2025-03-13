@@ -35,6 +35,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
 1. **Prepare Your Environment:**  
    As root, install **[Git](https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup)** and **[Git LFS](https://github.com/git-lfs/git-lfs/wiki/Tutorial)**, then clone the repository and create the `.env` file:
     ```sh
+    apt update
     apt install -y git git-lfs
     git clone git@github.com:cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
     ```
