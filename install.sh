@@ -11,31 +11,49 @@ fi
 . .env
 
 ##### [ Validate required environment variables ] #########################
+if [[ -z "${USER_NAME}" ]]; then
+	echo "\$USER_NAME environment variable missing."
+	exit 1
+fi
+if [[ -z "${USER_PASSWORD}" ]]; then
+	echo "\$USER_PASSWORD environment variable missing."
+	exit 1
+fi
 if [[ -z "${SSH_ALLOW_IP_CIDR}" ]]; then
 	echo "\$SSH_ALLOW_IP_CIDR environment variable missing."
 	exit 1
 fi
 
 ##### [ Update packages ] #################################################
-sudo apt update
-sudo apt dist-upgrade -y
+apt update
+apt dist-upgrade -y
+
+##### [ WORKAROUND: stuck SSH connections ] ###############################
+if [ ! -f /sys/class/tty/tty0/active ]; then
+  sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
+  systemctl restart sshd
+fi
 
 ##### [ Setup firewall ] ##################################################
-sudo apt install -y ufw
-sudo ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
-sudo ufw --force enable
+apt install -y ufw
+ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
+ufw --force enable
+
+##### [ Create new user ] #################################################
+echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
+echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
 
 ##### [ Setup Docker ] ####################################################
-sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
 OS_ARCHITECTURE="$(dpkg --print-architecture)"
 OS_CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
-echo "deb [arch=${OS_ARCHITECTURE} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian ${OS_CODENAME} stable" | \
-	sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo usermod -aG docker "${USER}"
-cat << RULES | sudo tee -a /etc/ufw/after.rules > /dev/null
+echo "deb [arch=${OS_ARCHITECTURE} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian ${OS_CODENAME} stable" \
+	> /etc/apt/sources.list.d/docker.list
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+usermod -aG docker "${USER_NAME}"
+cat << RULES >> /etc/ufw/after.rules
 
 # BEGIN UFW AND DOCKER
 *filter
@@ -58,7 +76,7 @@ cat << RULES | sudo tee -a /etc/ufw/after.rules > /dev/null
 COMMIT
 # END UFW AND DOCKER
 RULES
-sudo ufw reload
+ufw reload
 
 ##### [ Reboot system ] ####################################################
-sudo reboot
+reboot
