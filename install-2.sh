@@ -11,8 +11,8 @@ fi
 . .env
 
 ##### [ Validate required environment variables ] #########################
-if [[ -z "${SSH_ALLOW_IP}" ]]; then
-	echo "\$SSH_ALLOW_IP environment variable missing."
+if [[ -z "${SSH_ALLOW_IP_CIDR}" ]]; then
+	echo "\$SSH_ALLOW_IP_CIDR environment variable missing."
 	exit 1
 fi
 
@@ -22,7 +22,7 @@ sudo apt dist-upgrade -y
 
 ##### [ Setup firewall ] ##################################################
 sudo apt install -y ufw
-sudo ufw allow from "${SSH_ALLOW_IP}" to any port 22 proto tcp
+sudo ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
 sudo ufw --force enable
 
 ##### [ Setup Docker ] ####################################################

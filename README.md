@@ -23,7 +23,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
 - **install-2.sh** (to be run as the newly created user):  
   - Validates that the operating system is **[Debian](https://www.debian.org/releases/bookworm/installmanual)**.
   - Loads environment variables from a local `.env` file.
-  - Verifies that the required variable `SSH_ALLOW_IP` is set.
+  - Verifies that the required variable `SSH_ALLOW_IP_CIDR` is set.
   - Updates system packages.
   - Installs and configures **[UFW](https://help.ubuntu.com/community/UFW)** (firewall) to allow **[SSH](https://www.openssh.com/manual.html)** only from the specified IP.
   - Installs **[Docker](https://docs.docker.com/get-started/)** and **[Docker Compose](https://docs.docker.com/compose/gettingstarted/)**.
@@ -43,13 +43,13 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     cat << ENV > /tmp/cloud-skeleton-prerequisites/.env
     USER_NAME=
     USER_PASSWORD=
-    SSH_ALLOW_IP=
+    SSH_ALLOW_IP_CIDR=
     ENV
     ```
     Fill in the `.env` file with your desired values:
     - **USER_NAME:** The new username to be created.
     - **USER_PASSWORD:** The password for the new user.
-    - **SSH_ALLOW_IP:** The IP address allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
+    - **SSH_ALLOW_IP_CIDR:** The IP address allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
 
 2. **Run the Root Script:**  
    Execute the `./install-1.sh` script as root:
