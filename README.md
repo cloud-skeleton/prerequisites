@@ -6,7 +6,7 @@
 
 # **[Cloud Skeleton](https://github.com/cloud-skeleton/)** ► **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)**
 
-> This repository provides the installation scripts and instructions needed to prepare a **[Debian](https://www.debian.org/releases/bookworm/installmanual)** system for the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** ecosystem. It ensures that all required system components, user configurations, firewall rules, and **[Docker](https://docs.docker.com/get-started/)** setups (including **[Docker Compose](https://docs.docker.com/compose/gettingstarted/)**) are in place before deploying any **[Cloud Skeleton](https://github.com/cloud-skeleton/)** services.
+> This repository provides the installation script and instructions needed to prepare a **[Debian](https://www.debian.org/releases/bookworm/installmanual)** system for the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** ecosystem. It ensures that all required system components, user configurations, firewall rules, and **[Docker](https://docs.docker.com/get-started/)** setups (including **[Docker Compose](https://docs.docker.com/compose/gettingstarted/)**) are in place before deploying any **[Cloud Skeleton](https://github.com/cloud-skeleton/)** services.
 
 ## Overview
 
@@ -43,20 +43,8 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     ```sh
     apt update
     apt install -y git git-lfs
-    git clone git@github.com:cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
+    git clone https://github.com/cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
     ```
-    Create the environment file with:
-    ```sh
-    cat << ENV > /tmp/cloud-skeleton-prerequisites/.env
-    USER_NAME=
-    USER_PASSWORD=
-    SSH_ALLOW_IP_CIDR=
-    ENV
-    ```
-    Fill in the `.env` file with your desired values:
-    - **USER_NAME:** The new username to be created.
-    - **USER_PASSWORD:** The password for the new user.
-    - **SSH_ALLOW_IP_CIDR:** The CIDR (e.g., `192.0.2.0/24`) allowed to access [SSH](https://www.openssh.com/manual.html) (for firewall configuration).
 
 2. **Run the Installation Script:**  
    Execute the `./install.sh` script as **root**:
@@ -64,7 +52,12 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     cd /tmp/cloud-skeleton-prerequisites
     ./install.sh
     ```
-   The script will interactively prompt you for the required environment variables, perform all setup tasks, and automatically reboot the system once complete.
+   The script will interactively ask for:
+   - **USER_NAME:** The new username to be created.
+   - **USER_PASSWORD:** The password for the new user.
+   - **SSH_ALLOW_IP_CIDR:** The CIDR (e.g., `192.0.2.0/24`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
+
+   The script will then perform all setup tasks and automatically reboot the system once complete.
 
 ## Contributing
 
@@ -79,4 +72,4 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ---
 
-*This repository is maintained exclusively by the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** project, and it was developed by EU citizens who are strong proponents of the European Federation. 🇪🇺*
+*This repository is maintained exclusively by the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** project.*
