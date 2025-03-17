@@ -10,31 +10,22 @@
 
 ## Overview
 
-The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** project includes an installation script (**install.sh**) that performs the following tasks:
+The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** project includes a unified installation script (**install.sh**) that performs the following tasks:
 
 - **Validate Operating System:**  
-  Ensures that the script is run only on **[Debian](https://www.debian.org/releases/bookworm/installmanual)**.
+  The script checks the system's `/etc/os-release` to determine the current OS and version, then constructs a path to an OS-specific script (e.g., `os/debian/12.sh`) and executes it. If no supported script is found, the installation aborts.
 
 - **Interactive Environment Variable Prompt:**  
-  Asks the user to enter required variables—**USER_NAME**, **USER_PASSWORD**, and **SSH_ALLOW_IP_CIDR**—and validates that these are non-empty.
+  It interactively asks the user to enter the required variables—**USER_NAME**, **USER_PASSWORD**, and **SSH_ALLOW_IP_CIDR**—and ensures that they are non-empty.
 
-- **Update System Packages:**  
-  Updates and upgrades the system packages.
-
-- **Workaround for Stuck [SSH](https://www.openssh.com/manual.html) Connections:**  
-  Applies a workaround by modifying PAM session settings and restarting the **[SSH](https://www.openssh.com/manual.html)** daemon if necessary.
-
-- **Setup Firewall:**  
-  Installs and configures **[UFW](https://help.ubuntu.com/community/UFW)** to allow **[SSH](https://www.openssh.com/manual.html)** only from the specified CIDR range.
-
-- **Create New User:**  
-  Creates a new user with the specified credentials and grants the user sudo privileges.
-
-- **Setup Docker:**  
-  Installs **[Docker](https://docs.docker.com/get-started/)** and related packages, and configures **[Docker’s](https://docs.docker.com/get-started/)** integration with **[UFW](https://help.ubuntu.com/community/UFW)** by appending necessary rules and reloading the firewall.
-
-- **Reboot:**  
-  Reboots the system automatically after all setup tasks are complete.
+- **Run OS-Specific Installation:**  
+  The OS-specific script (for Debian 12, located at `os/debian/12.sh`) performs the following tasks:
+  - Updates and upgrades system packages.
+  - Applies a workaround for stuck **[SSH](https://www.openssh.com/manual.html)** connections by modifying PAM session settings and restarting the **[SSH](https://www.openssh.com/manual.html)** daemon if necessary.
+  - Installs and configures **[UFW](https://help.ubuntu.com/community/UFW)** to allow **[SSH](https://www.openssh.com/manual.html)** only from the specified CIDR range.
+  - Creates a new user with the provided credentials and grants that user sudo privileges.
+  - Installs **[Docker](https://docs.docker.com/get-started/)** and related packages, configures **[Docker’s](https://docs.docker.com/get-started/)** integration with **[UFW](https://help.ubuntu.com/community/UFW)** by appending necessary rules, and reloads the firewall.
+  - Reboots the system automatically after all setup tasks are complete.
 
 ## Usage
 
@@ -52,12 +43,12 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     cd /tmp/cloud-skeleton-prerequisites
     ./install.sh
     ```
-   The script will interactively ask for:
+   The script will interactively prompt you for:
    - **USER_NAME:** The new username to be created.
    - **USER_PASSWORD:** The password for the new user.
    - **SSH_ALLOW_IP_CIDR:** The CIDR (e.g., `192.0.2.0/24`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
 
-   The script will then perform all setup tasks and automatically reboot the system once complete.
+   Once these inputs are provided, the script will execute the OS-specific installation tasks and automatically reboot the system.
 
 ## Contributing
 
