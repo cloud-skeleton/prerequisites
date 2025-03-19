@@ -1,5 +1,13 @@
 #!/usr/bin/env -S bash -e -o pipefail
 
+##### [ Enable Quad9 nameservers ] ########################################
+cat << CONF > /etc/resolv.conf
+search localhost
+
+nameserver 9.9.9.9
+nameserver 149.112.112.112
+CONF
+
 ##### [ Update packages ] #################################################
 apt update
 apt dist-upgrade -y
