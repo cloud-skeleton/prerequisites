@@ -9,20 +9,20 @@ fi
 
 ##### [ Ask for required environment variables ] ##########################
 while true; do
-	read -rn 16 -p "Enter name for new user: " USER_NAME
+	read -erp "Enter name for new user: " USER_NAME
 	if [[ -n "${USER_NAME}" ]]; then
 		break
 	fi
 done
 while true; do
-	read -rn 16 -sp "Enter password for new user: " USER_PASSWORD
+	read -ersp "Enter password for new user: " USER_PASSWORD
 	echo
 	if [[ -n "${USER_PASSWORD}" ]]; then
 		break
 	fi
 done
 while true; do
-	read -rn 18 -p "Enter IP CIDR for SSH connections: " SSH_ALLOW_IP_CIDR
+	read -erp "Enter IP CIDR for SSH connections: " SSH_ALLOW_IP_CIDR
 	if [[ -n "${SSH_ALLOW_IP_CIDR}" ]]; then
 		break
 	fi
