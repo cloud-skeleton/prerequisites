@@ -16,7 +16,6 @@ while true; do
 done
 while true; do
 	read -ersp "Enter password for new user: " USER_PASSWORD
-	echo
 	if [[ -n "${USER_PASSWORD}" ]]; then
 		break
 	fi
