@@ -33,7 +33,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
    As **root**, install **[Git](https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup)** and **[Git LFS](https://github.com/git-lfs/git-lfs/wiki/Tutorial)**, then clone the repository:
     ```sh
     apt update
-    apt install -y git git-lfs
+    apt install -y git git-lfs curl
     git clone https://github.com/cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
     ```
 
