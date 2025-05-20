@@ -21,8 +21,8 @@ while true; do
 	fi
 done
 while true; do
-	read -erp "Enter IP CIDR for SSH connections: " SSH_ALLOW_IP_CIDR
-	if [[ -n "${SSH_ALLOW_IP_CIDR}" ]]; then
+	read -erp "Enter IP CIDRs for SSH connections: " -a SSH_ALLOW_IP_CIDRS
+	if [[ -n "${SSH_ALLOW_IP_CIDRS}" ]]; then
 		break
 	fi
 done

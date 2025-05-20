@@ -20,7 +20,9 @@ fi
 
 ##### [ Setup firewall ] ##################################################
 apt install -y ufw
-ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
+for SSH_ALLOW_IP_CIDR in "${SSH_ALLOW_IP_CIDRS[@]}"; do
+  ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
+done
 ufw --force enable
 
 ##### [ Create new user ] #################################################
@@ -61,6 +63,10 @@ COMMIT
 # END UFW AND DOCKER
 RULES
 ufw reload
+
+##### [ Initialize swarm cluster ] ########################################
+IP_ADDRESS="$(hostname -I | awk '{ print $1 }')"
+sudo docker swarm init --advertise-addr "${IP_ADDRESS}"
 
 ##### [ Reboot system ] ###################################################
 reboot
