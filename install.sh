@@ -8,18 +8,15 @@ if [ ! -f "${OS_SCRIPT_FILE}" ]; then
 fi
 
 ##### [ Ask for required environment variables ] ##########################
-while true; do
-	read -erp "Enter name for new user: " USER_NAME
-	if [[ -n "${USER_NAME}" ]]; then
-		break
-	fi
-done
-while true; do
-	read -ersp "Enter password for new user: " USER_PASSWORD
-	if [[ -n "${USER_PASSWORD}" ]]; then
-		break
-	fi
-done
+read -erp "Enter name for new user (or leave blank to use current one): " USER_NAME
+if [[ -n "${USER_NAME}" ]]; then
+	while true; do
+		read -ersp "Enter password for new user: " USER_PASSWORD
+		if [[ -n "${USER_PASSWORD}" ]]; then
+			break
+		fi
+	done
+fi
 while true; do
 	read -erp "Enter IP CIDRs for SSH connections: " -a SSH_ALLOW_IP_CIDRS
 	if [[ -n "${SSH_ALLOW_IP_CIDRS}" ]]; then

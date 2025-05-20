@@ -26,8 +26,10 @@ done
 ufw --force enable
 
 ##### [ Create new user ] #################################################
-echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
-echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
+if [[ -n "${USER_NAME}" ]]; then
+	echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
+	echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
+fi
 
 ##### [ Setup Docker ] ####################################################
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
@@ -38,6 +40,9 @@ echo "deb [arch=${OS_ARCHITECTURE} signed-by=/etc/apt/keyrings/docker.asc] https
 	> /etc/apt/sources.list.d/docker.list
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+if [[ -z "${USER_NAME}" ]]; then
+	USER_NAME="${USER}"
+fi
 usermod -aG docker "${USER_NAME}"
 cat << RULES >> /etc/ufw/after.rules
 

@@ -44,7 +44,7 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
     ./install.sh
     ```
    The script will interactively prompt you for:
-   - **USER_NAME:** The new username to be created.
+   - **USER_NAME:** The new username to be created (or *blank* if using current user).
    - **USER_PASSWORD:** The password for the new user.
    - **SSH_ALLOW_IP_CIDRS:** Space separated CIDRs (e.g., `10.0.0.0/8 172.16.0.0/12 192.168.0.0/16`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
    - **IS_MANAGER:** `y/n` if current instance is going to be setup as **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster manager.
