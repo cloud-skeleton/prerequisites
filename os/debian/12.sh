@@ -40,10 +40,10 @@ echo "deb [arch=${OS_ARCHITECTURE} signed-by=/etc/apt/keyrings/docker.asc] https
 	> /etc/apt/sources.list.d/docker.list
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-if [[ -z "${USER_NAME}" ]]; then
-	USER_NAME="${USER}"
+usermod -aG docker "${USER}"
+if [[ -n "${USER_NAME}" ]]; then
+	usermod -aG docker "${USER_NAME}"
 fi
-usermod -aG docker "${USER_NAME}"
 cat << RULES >> /etc/ufw/after.rules
 
 # BEGIN UFW AND DOCKER
