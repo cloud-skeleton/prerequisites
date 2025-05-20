@@ -14,14 +14,14 @@ apt dist-upgrade -y
 
 ##### [ WORKAROUND: stuck SSH connections ] ###############################
 if [ ! -f /sys/class/tty/tty0/active ]; then
-  sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
-  systemctl restart sshd
+	sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
+	systemctl restart sshd
 fi
 
 ##### [ Setup firewall ] ##################################################
 apt install -y ufw
 for SSH_ALLOW_IP_CIDR in "${SSH_ALLOW_IP_CIDRS[@]}"; do
-  ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
+	ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
 done
 ufw --force enable
 
@@ -65,8 +65,23 @@ RULES
 ufw reload
 
 ##### [ Initialize swarm cluster ] ########################################
-IP_ADDRESS="$(hostname -I | awk '{ print $1 }')"
-sudo docker swarm init --advertise-addr "${IP_ADDRESS}"
+for SWARM_NODE_IP_CIDR in "${SWARM_NODE_IP_CIDRS[@]}"; do
+	ufw allow from "${SWARM_NODE_IP_CIDR}" to any port 7946 proto tcp
+	ufw allow from "${SWARM_NODE_IP_CIDR}" to any port 7946 proto udp
+	ufw allow from "${SWARM_NODE_IP_CIDR}" to any port 4789 proto udp
+	if [[ "${IS_MANAGER}" == "y" ]]; then
+		ufw allow from "${SWARM_NODE_IP_CIDR}" to any port 2377 proto tcp
+	fi
+done
+if [ -z "${SWARM_CLUSTER_JOIN_TOKEN}" ]; then
+	IP_ADDRESS="$(hostname -I | awk '{ print $1 }')"
+	docker swarm init --advertise-addr "${IP_ADDRESS}"
+else
+	docker swarm join --token "${SWARM_CLUSTER_JOIN_TOKEN}" "${SWARM_NODE_MANAGER_IP}:2377"
+fi
+if [[ "${IS_MANAGER}" == "y" ]]; then
+	docker node update --availability drain "$(hostname)"
+fi
 
 ##### [ Reboot system ] ###################################################
 reboot

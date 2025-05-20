@@ -46,7 +46,11 @@ The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** projec
    The script will interactively prompt you for:
    - **USER_NAME:** The new username to be created.
    - **USER_PASSWORD:** The password for the new user.
-   - **SSH_ALLOW_IP_CIDR:** The CIDR (e.g., `192.0.2.0/24`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
+   - **SSH_ALLOW_IP_CIDRS:** Space separated CIDRs (e.g., `10.0.0.0/8 172.16.0.0/12 192.168.0.0/16`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (for firewall configuration).
+   - **IS_MANAGER:** `y/n` if current instance is going to be setup as **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster manager.
+   - **SWARM_CLUSTER_JOIN_TOKEN:** **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster join token (or *blank* if creating a new cluster).
+   - **SWARM_NODE_MANAGER_IP:** IP address of any available **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster manager.
+   - **SWARM_NODE_IP_CIDRS:** Space separated CIDRs (e.g., `10.0.0.0/8 172.16.0.0/12 192.168.0.0/16`) of other **[Docker Swarm](https://docs.docker.com/engine/swarm/)** nodes (for firewall configuration).
 
    Once these inputs are provided, the script will execute the OS-specific installation tasks and automatically reboot the system.
 
