@@ -40,7 +40,7 @@ echo "deb [arch=${OS_ARCHITECTURE} signed-by=/etc/apt/keyrings/docker.asc] https
 	> /etc/apt/sources.list.d/docker.list
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-usermod -aG docker "${USER}"
+usermod -aG docker "${SUDO_USER}"
 if [[ -n "${USER_NAME}" ]]; then
 	usermod -aG docker "${USER_NAME}"
 fi
