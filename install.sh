@@ -31,7 +31,7 @@ while true; do
 done
 while true; do
 	read -erp "Enter cluster join token (or leave blank to initialize): " SWARM_CLUSTER_JOIN_TOKEN
-	if [[ "${SWARM_CLUSTER_JOIN_TOKEN}" =~ ^(SWMTKN-1-[a-z0-9]+)?$ ]]; then
+	if [[ "${SWARM_CLUSTER_JOIN_TOKEN}" =~ ^(SWMTKN-1-[a-z0-9-]+)?$ ]]; then
 		break
 	fi
 done
