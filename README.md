@@ -35,6 +35,42 @@ To set up a resilient and secure infrastructure, you must provision **at least 3
 2. 🧱 **Main Worker Node** – Runs core application workloads.  
 3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik](https://doc.traefik.io/traefik/)** or a similar reverse proxy.
 
+```mermaid
+flowchart TD
+
+  subgraph Internet
+    EXTERNAL_CLIENT[Client<br/>🔗 Internet]
+  end
+
+  subgraph Ingress Worker Node
+    ingress[ingress-node<br/>🌐 Public IP<br/>Ports: 80, 443<br/>(HTTP, HTTPS)]
+  end
+
+  subgraph Manager Node
+    manager[manager-node<br/>🧠 Swarm Manager<br/>Ports: 2377, 7946, 4789]
+  end
+
+  subgraph Main Worker Node
+    worker[worker-main<br/>📦 App Workloads<br/>Ports: 7946, 4789]
+  end
+
+  %% External access
+  EXTERNAL_CLIENT -->|80 / 443 (HTTP/HTTPS)| ingress
+
+  %% Overlay network traffic
+  ingress -->|4789 (VXLAN Overlay)| worker
+  ingress -->|4789 (VXLAN Overlay)| manager
+
+  %% Swarm control and join
+  manager -->|2377 (Cluster Control)<br/>Swarm Join| ingress
+  manager -->|2377 (Cluster Control)<br/>Swarm Join| worker
+
+  %% Gossip and discovery
+  manager <-->|7946 (Gossip - TCP/UDP)| worker
+  manager <-->|7946 (Gossip - TCP/UDP)| ingress
+  worker <-->|7946 (Gossip - TCP/UDP)| ingress
+```
+
 ---
 
 ### 1. **Prepare Your Environment**
