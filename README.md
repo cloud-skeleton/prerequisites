@@ -39,9 +39,22 @@ To set up a resilient and secure infrastructure, you must provision **at least 3
 graph LR
 
   external_client["<b>Client</b><br>🌐 Internet"]
-  ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
-  worker["<b>Main Worker Node</b><br>📦 App Workloads"]
-  manager["<b>Manager Node</b><br>🧠 Swarm Manager"]
+
+  subgraph "<b style='color:navy'>Network</b>"
+
+    subgraph "<b style='color:teal'>Public Subnet</b>"
+      ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
+    end
+
+    subgraph "<b style='color:teal'>Private Subnet A</b>"
+      manager["<b>Manager Node</b><br>🧠 Swarm Manager"]
+    end
+
+    subgraph "<b style='color:teal'>Private Subnet B</b>"
+      worker["<b>Main Worker Node</b><br>📦 App Workloads"]
+    end
+
+  end
 
   %% External access
   external_client -->|"80 / tcp (HTTP)<br>443 / tcp (HTTPS)"| ingress
