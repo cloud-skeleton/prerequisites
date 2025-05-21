@@ -42,15 +42,15 @@ graph LR
 
   subgraph "<b>Network</b>"
 
-    subgraph "<b>Subnet</b> <sub style='color:seagreen'><i>(Public)</i></sub>"
+    subgraph "<b>Subnet</b><br><i>(Public)</i>"
       ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
     end
 
-    subgraph "<b>Subnet A</b> <sub style='color:orangered'><i>(Private)</i>"
+    subgraph "<b>Subnet A</b><br><i>(Private)</i>"
       manager["<b>Manager Node</b><br>🧠 Swarm Manager"]
     end
 
-    subgraph "<b>Subnet B</b> <sub style='color:orangered'><i>(Private)</i>"
+    subgraph "<b>Subnet B</b><br><i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
     end
 
