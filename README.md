@@ -33,15 +33,13 @@ To set up a resilient and secure infrastructure, you must provision **at least 3
 
 1. 🧠 **Manager Node** – Orchestrates the **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster.  
 2. 🧱 **Main Worker Node** – Runs core application workloads.  
-3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting  
-   **[Traefik](https://doc.traefik.io/traefik/)** or similar reverse proxy.
+3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik](https://doc.traefik.io/traefik/)** or similar reverse proxy.
 
 ---
 
 ### 1. **Prepare Your Environment**
 
-On **each node**, log in as **root**, install **[Git](https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup)**,  
-**[Git LFS](https://github.com/git-lfs/git-lfs/wiki/Tutorial)**, and **[Curl](https://everything.curl.dev/)**, then clone the prerequisites repository:
+On **each node**, log in as **root**, install **[Git](https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup)**, **[Git LFS](https://github.com/git-lfs/git-lfs/wiki/Tutorial)**, and **[Curl](https://everything.curl.dev/)**, then clone the prerequisites repository:
 
 ```sh
 apt update
@@ -64,16 +62,11 @@ The script will interactively prompt you for:
 
 - **USER_NAME**: The new username to be created (or *blank* if using current user).
 - **USER_PASSWORD**: The password for the new user.
-- **SSH_ALLOW_IP_CIDRS**: Space-separated CIDRs (e.g., `10.0.0.0/8 172.16.0.0/12 192.168.0.0/16`) allowed to access  
-  **[SSH](https://www.openssh.com/manual.html)** (used for firewall configuration).
-- **IS_MANAGER**: `y/n` to determine whether the current instance should be configured as a  
-  **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster manager.
-- **SWARM_CLUSTER_JOIN_TOKEN**: The cluster join token from an existing  
-  **[Docker Swarm](https://docs.docker.com/engine/swarm/)** manager (or leave *blank* to initialize a new cluster).
-- **SWARM_NODE_MANAGER_IP**: IP address of any available  
-  **[Docker Swarm](https://docs.docker.com/engine/swarm/)** manager (for joining the cluster).
-- **SWARM_NODE_IP_CIDRS**: Space-separated CIDRs of other  
-  **[Docker Swarm](https://docs.docker.com/engine/swarm/)** nodes (used for internal firewall rules).
+- **SSH_ALLOW_IP_CIDRS**: Space-separated CIDRs (e.g., `10.0.0.0/8 172.16.0.0/12 192.168.0.0/16`) allowed to access **[SSH](https://www.openssh.com/manual.html)** (used for firewall configuration).
+- **IS_MANAGER**: `y/n` to determine whether the current instance should be configured as a **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster manager.
+- **SWARM_CLUSTER_JOIN_TOKEN**: The cluster join token from an existing **[Docker Swarm](https://docs.docker.com/engine/swarm/)** manager (or leave *blank* to initialize a new cluster).
+- **SWARM_NODE_MANAGER_IP**: IP address of any available **[Docker Swarm](https://docs.docker.com/engine/swarm/)** manager (for joining the cluster).
+- **SWARM_NODE_IP_CIDRS**: Space-separated CIDRs of other **[Docker Swarm](https://docs.docker.com/engine/swarm/)** nodes (used for internal firewall rules).
 
 ---
 
