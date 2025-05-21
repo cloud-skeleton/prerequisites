@@ -36,39 +36,34 @@ To set up a resilient and secure infrastructure, you must provision **at least 3
 3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik](https://doc.traefik.io/traefik/)** or a similar reverse proxy.
 
 ```mermaid
-flowchart TD
+graph LR
 
-  subgraph Internet
-    EXTERNAL_CLIENT[Client<br/>🔗 Internet]
-  end
-
-  subgraph Ingress Worker Node
-    ingress[ingress-node<br/>🌐 Public IP<br/>Ports: 80, 443<br/>(HTTP, HTTPS)]
-  end
-
-  subgraph Manager Node
-    manager[manager-node<br/>🧠 Swarm Manager<br/>Ports: 2377, 7946, 4789]
-  end
-
-  subgraph Main Worker Node
-    worker[worker-main<br/>📦 App Workloads<br/>Ports: 7946, 4789]
-  end
+  external_client["<b>Client</b><br>🌐 Internet"]
+  ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
+  worker["<b>Main Worker Node</b><br>📦 App Workloads"]
+  manager["<b>Manager Node</b><br>🧠 Swarm Manager"]
 
   %% External access
-  EXTERNAL_CLIENT -->|80 / 443 (HTTP/HTTPS)| ingress
+  external_client -->|"80 / tcp (HTTP)<br>443 / tcp (HTTPS)"| ingress
 
-  %% Overlay network traffic
-  ingress -->|4789 (VXLAN Overlay)| worker
-  ingress -->|4789 (VXLAN Overlay)| manager
+  %% Overlay network (VXLAN)
+  ingress <-->|"4789 / udp (VXLAN Data)"| worker
+  ingress <-->|"4789 / udp (VXLAN Data)"| manager
+  worker <-->|"4789 / udp (VXLAN Data)"| manager
 
-  %% Swarm control and join
-  manager -->|2377 (Cluster Control)<br/>Swarm Join| ingress
-  manager -->|2377 (Cluster Control)<br/>Swarm Join| worker
+  %% Swarm management (one-way)
+  manager -->|"2377 / tcp (Swarm Control)"| ingress
+  manager -->|"2377 / tcp (Swarm Control)"| worker
 
-  %% Gossip and discovery
-  manager <-->|7946 (Gossip - TCP/UDP)| worker
-  manager <-->|7946 (Gossip - TCP/UDP)| ingress
-  worker <-->|7946 (Gossip - TCP/UDP)| ingress
+  %% Gossip - TCP
+  ingress <-->|"7946 / tcp (Gossip Control)"| manager
+  worker <-->|"7946 / tcp (Gossip Control)"| manager
+  worker <-->|"7946 / tcp (Gossip Control)"| ingress
+
+  %% Gossip - UDP
+  ingress <-->|"7946 / udp (Gossip Discov.)"| manager
+  worker <-->|"7946 / udp (Gossip Discov.)"| manager
+  worker <-->|"7946 / udp (Gossip Discov.)"| ingress
 ```
 
 ---
