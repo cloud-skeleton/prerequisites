@@ -40,17 +40,17 @@ graph LR
 
   external_client["<b>Client</b><br>🌐 Internet"]
 
-  subgraph "<b style='color:navy'>Network</b>"
+  subgraph "<b>Network</b>"
 
-    subgraph "<b style='color:teal'>Public Subnet</b>"
+    subgraph "<b>Subnet</b> <sub style='color:seagreen'><i>(Public)</i></sub>"
       ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
     end
 
-    subgraph "<b style='color:teal'>Private Subnet A</b>"
+    subgraph "<b>Subnet A</b> <sub style='color:orangered'><i>(Private)</i>"
       manager["<b>Manager Node</b><br>🧠 Swarm Manager"]
     end
 
-    subgraph "<b style='color:teal'>Private Subnet B</b>"
+    subgraph "<b>Subnet B</b> <sub style='color:orangered'><i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
     end
 
