@@ -54,7 +54,7 @@ graph LR
     end
   end
 
-  external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br><b>443 / tcp</b> <i>(HTTPS)</i>"| ingress
+  external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br>&nbsp;<b>443 / tcp</b> <i>(HTTPS)</i>&nbsp;"| ingress
 
   ingress <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| worker
 
