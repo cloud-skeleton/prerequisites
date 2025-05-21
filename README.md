@@ -41,7 +41,6 @@ graph LR
   external_client["<b>Client</b><br>🌐 Internet"]
 
   subgraph "<b>Network</b>"
-
     subgraph "<b>Subnet</b><br><i>(Public)</i>"
       ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
     end
@@ -53,30 +52,19 @@ graph LR
     subgraph "<b>Subnet B</b><br><i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
     end
-
   end
 
-  %% External access
-  external_client -->|"80 / tcp (HTTP)<br>443 / tcp (HTTPS)"| ingress
+  external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br><b>443 / tcp</b> <i>(HTTPS)</i>"| ingress
 
-  %% Overlay network (VXLAN)
-  ingress <-->|"4789 / udp (VXLAN Data)"| worker
-  ingress <-->|"4789 / udp (VXLAN Data)"| manager
-  worker <-->|"4789 / udp (VXLAN Data)"| manager
+  ingress <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| worker
 
-  %% Swarm management (one-way)
-  manager -->|"2377 / tcp (Swarm Control)"| ingress
-  manager -->|"2377 / tcp (Swarm Control)"| worker
+  ingress <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
 
-  %% Gossip - TCP
-  ingress <-->|"7946 / tcp (Gossip Control)"| manager
-  worker <-->|"7946 / tcp (Gossip Control)"| manager
-  worker <-->|"7946 / tcp (Gossip Control)"| ingress
+  worker <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
 
-  %% Gossip - UDP
-  ingress <-->|"7946 / udp (Gossip Discov.)"| manager
-  worker <-->|"7946 / udp (Gossip Discov.)"| manager
-  worker <-->|"7946 / udp (Gossip Discov.)"| ingress
+  manager -->|"<b>2377 / tcp</b> <i>(Swarm Control)</i>"| ingress
+
+  manager -->|"<b>2377 / tcp</b> <i>(Swarm Control)</i>"| worker
 ```
 
 ---
