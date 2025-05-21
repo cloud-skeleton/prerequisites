@@ -33,7 +33,7 @@ To set up a resilient and secure infrastructure, you must provision **at least 3
 
 1. 🧠 **Manager Node** – Orchestrates the **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster.  
 2. 🧱 **Main Worker Node** – Runs core application workloads.  
-3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik](https://doc.traefik.io/traefik/)** or similar reverse proxy.
+3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik](https://doc.traefik.io/traefik/)** or a similar reverse proxy.
 
 ---
 
@@ -84,14 +84,14 @@ Repeat this process on each of your 3+ nodes to form a fully functional, product
 
 ### 3. **Label Your Nodes**
 
-After all nodes have joined the **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster, log in to your **manager node** and assign roles to each node using **[Docker](https://docs.docker.com/get-started/)** node labels.
+After all nodes have joined the **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster, log in to your **manager node** and assign node roles using **[Docker](https://docs.docker.com/get-started/)** node labels.
 
-> ⚠️ Make sure to replace the hostnames below (`docker-swarm-manager`, etc.) with the **actual hostnames of your own nodes**. You can list them with `docker node ls`.
+> ⚠️ Be sure to replace the example hostnames below (`${DOCKER_SWARM_MANAGER}`, etc.) with the **actual hostnames of your nodes**. You can view them using `docker node ls`.
 
 ```sh
-docker node update --label-add type=manager docker-swarm-manager
-docker node update --label-add type=main docker-swarm-worker-main
-docker node update --label-add type=ingress docker-swarm-worker-ingress
+docker node update --label-add type=manager ${DOCKER_SWARM_MANAGER}
+docker node update --label-add type=main ${DOCKER_SWARM_WORKER_MAIN}
+docker node update --label-add type=ingress ${DOCKER_SWARM_WORKER_INGRESS}
 ```
 
 These labels can then be used to control service placement via `placement.constraints` in your **[Docker](https://docs.docker.com/get-started/)** stack files.
