@@ -10,22 +10,9 @@
 
 ## Overview
 
-The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** project includes a unified installation script (**install.sh**) that performs the following tasks:
+The **[Prerequisites](https://github.com/cloud-skeleton/prerequisites/)** repository provides a unified, interactive setup script that prepares supported **Linux distributions** (e.g., *Debian*, *Ubuntu*, *Alpine*) for use within the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** infrastructure via modular OS-specific scripts.
 
-- **Validate Operating System:**  
-  The script checks the system's `/etc/os-release` to determine the current OS and version, then constructs a path to an OS-specific script (e.g., `os/debian/12.sh`) and executes it. If no supported script is found, the installation aborts.
-
-- **Interactive Environment Variable Prompt:**  
-  It interactively asks the user to enter the required variables—**USER_NAME**, **USER_PASSWORD**, and **SSH_ALLOW_IP_CIDR**—and ensures that they are non-empty.
-
-- **Run OS-Specific Installation:**  
-  The OS-specific script (for Debian 12, located at `os/debian/12.sh`) performs the following tasks:
-  - Updates and upgrades system packages.
-  - Applies a workaround for stuck **[SSH](https://www.openssh.com/manual.html)** connections by modifying PAM session settings and restarting the **[SSH](https://www.openssh.com/manual.html)** daemon if necessary.
-  - Installs and configures **[UFW](https://help.ubuntu.com/community/UFW)** to allow **[SSH](https://www.openssh.com/manual.html)** only from the specified CIDR range.
-  - Creates a new user with the provided credentials and grants that user sudo privileges.
-  - Installs **[Docker](https://docs.docker.com/get-started/)** and related packages, configures **[Docker’s](https://docs.docker.com/get-started/)** integration with **[UFW](https://help.ubuntu.com/community/UFW)** by appending necessary rules, and reloads the firewall.
-  - Reboots the system automatically after all setup tasks are complete.
+It is designed to be safe, modular, and self-documenting — perfect for bare-metal servers, cloud VMs, or homelab deployments.
 
 ## Usage
 
@@ -122,8 +109,8 @@ After all nodes have joined the **[Docker Swarm](https://docs.docker.com/engine/
 
 ```sh
 docker node update --label-add type=manager ${DOCKER_SWARM_MANAGER}
-docker node update --label-add type=main ${DOCKER_SWARM_WORKER_MAIN}
-docker node update --label-add type=ingress ${DOCKER_SWARM_WORKER_INGRESS}
+docker node update --label-add type=worker.main ${DOCKER_SWARM_WORKER_MAIN}
+docker node update --label-add type=worker.ingress ${DOCKER_SWARM_WORKER_INGRESS}
 ```
 
 These labels can then be used to control service placement via `placement.constraints` in your **[Docker](https://docs.docker.com/get-started/)** stack files.
