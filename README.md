@@ -1,8 +1,6 @@
 ![Cloud Skeleton](./assets/logo.jpg)
 
-[![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)  
-[![OS: Debian ≥12](https://img.shields.io/badge/OS-Debian_≥12-red)]()  
-[![Shell: Bash](https://img.shields.io/badge/Shell-Bash-green)]()
+[![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE) [![OS: Debian ≥12](https://img.shields.io/badge/OS-Debian_≥12-red)]() [![Shell: Bash](https://img.shields.io/badge/Shell-Bash-green)]()
 
 # **[Cloud Skeleton][cloud-skeleton]** ► **[Prerequisites][prerequisites]**
 
