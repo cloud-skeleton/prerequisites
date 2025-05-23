@@ -119,6 +119,11 @@ To enable **shared, persistent storage** across your **[Docker Swarm][docker-swa
 
 You must have an accessible **[NFS][nfs]** server (e.g., a NAS or dedicated data node) exporting a directory for use by the cluster.
 
+> 🛠️ Don't have an **[NFS][nfs]** server?
+>
+> If you don’t yet have a persistent storage server, see the dedicated repository:  
+> 👉 **[Cloud Skeleton][cloud-skeleton]** ► **[Data Storage][data-storage]**. It contains installation scripts and instructions for setting up a highly available **[NFS][nfs]** storage server that can be mounted from any node in your cluster.
+
 #### 🟩 Example: Create a shared **[NFS][nfs]** volume
 
 On any **[Docker Swarm][docker-swarm]** node, run the following (replacing the address and path with your setup):
@@ -148,11 +153,6 @@ volumes:
 ```
 
 ---
-
-#### 🛠️ Don't have an **[NFS][nfs]** server?
-
-If you don’t yet have a persistent storage server, see the dedicated repository:  
-👉 **[cloud-skeleton/data-storage][data-storage]**. It contains installation scripts and instructions for setting up a highly available **[NFS][nfs]** storage server that can be mounted from any node in your cluster.
 
 ## Contributing
 
