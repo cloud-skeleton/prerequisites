@@ -115,6 +115,49 @@ docker node update --label-add type=worker.ingress ${DOCKER_SWARM_WORKER_INGRESS
 
 These labels can then be used to control service placement via `placement.constraints` in your **[Docker](https://docs.docker.com/get-started/)** stack files.
 
+---
+
+### 4. **Configure Persistent Volume ([NFS][nfs]-based)**
+
+To enable **shared, persistent storage** across your **[Docker Swarm](https://docs.docker.com/engine/swarm/)** cluster, configure an **external [NFS][nfs] volume** that can be mounted by services on any node.
+
+You must have an accessible **[NFS][nfs]** server (e.g., a NAS or dedicated data node) exporting a directory for use by the cluster.
+
+#### 🟩 Example: Create a shared **[NFS][nfs]** volume
+
+On any **[Docker Swarm](https://docs.docker.com/engine/swarm/)** node, run the following (replacing the address and path with your setup):
+
+```sh
+docker volume create \
+  --driver local \
+  --opt type=nfs \
+  --opt o=addr=${NFS_SERVER_IP},rw \
+  --opt device=:/srv/data/cloud-skeleton \
+  storage
+```
+
+This will create a volume named `storage` that services in your stack can mount like this:
+
+```yaml
+volumes:
+  - storage:/data/my-service
+```
+
+And in the `volumes` section of your `docker-compose.yml` or `stack.yml`:
+
+```yaml
+volumes:
+  storage:
+    external: true
+```
+
+---
+
+#### 🛠️ Don't have an **[NFS][nfs]** server?
+
+If you don’t yet have a persistent storage server, see the dedicated repository:  
+👉 **[cloud-skeleton/data-storage](https://github.com/cloud-skeleton/data-storage)**. It contains installation scripts and instructions for setting up a highly available **[NFS][nfs]** storage server that can be mounted from any node in your cluster.
+
 ## Contributing
 
 Contributions and improvements to this installation script are welcome!  
@@ -129,3 +172,10 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 ---
 
 *This repository is maintained exclusively by the **[Cloud Skeleton](https://github.com/cloud-skeleton/)** project, and it was developed by EU citizens who are strong proponents of the European Federation. 🇪🇺*
+
+<!-- Definitions -->
+[docker-compose]: https://docs.docker.com/compose/gettingstarted/
+[docker-swarm]: https://docs.docker.com/engine/swarm/
+[docker]: https://docs.docker.com/get-started/
+[nfs]: https://www.techtarget.com/searchenterprisedesktop/definition/Network-File-System
+[ssh]: https://www.openssh.com/manual.html
