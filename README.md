@@ -169,7 +169,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 *This repository is maintained exclusively by the **[Cloud Skeleton][cloud-skeleton]** project, and it was developed by EU citizens who are strong proponents of the European Federation. 🇪🇺*
 
-<!-- Definitions -->
+<!-- Reference -->
 [cloud-skeleton]: https://github.com/cloud-skeleton/  
 [curl]: https://everything.curl.dev/  
 [data-storage]: https://github.com/cloud-skeleton/data-storage  
