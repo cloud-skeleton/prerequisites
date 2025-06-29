@@ -54,7 +54,20 @@ graph LR
 
 ### 1. **Prepare Your Environment**
 
-On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:
+Install **[uv][uv]**:
+
+```sh
+wget -qO- https://astral.sh/uv/install.sh | sh
+export UV_LINK_MODE=copy
+```
+
+### 2. **Install Dependencies**
+
+```sh
+
+```
+
+<!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:
 
 ```sh
 apt update
@@ -150,7 +163,7 @@ And in the `volumes` section of your `docker-compose.yml` or `stack.yml`:
 volumes:
   storage:
     external: true
-```
+``` -->
 
 ---
 
@@ -182,3 +195,4 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 [prerequisites]: https://github.com/cloud-skeleton/prerequisites/  
 [ssh]: https://www.openssh.com/manual.html  
 [traefik]: https://doc.traefik.io/traefik/
+[uv]: https://docs.astral.sh/uv/getting-started/
