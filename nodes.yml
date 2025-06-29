@@ -1,9 +1,9 @@
 all:
   children:
-    ingress-worker:
+    ingress_worker:
       hosts:
         "{{ lookup('env', 'NODE_INGRESS_WORKER') }}":
-    main-worker:
+    main_worker:
       hosts:
         "{{ lookup('env', 'NODE_MAIN_WORKER') }}":
     manager:

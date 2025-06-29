@@ -107,7 +107,7 @@ ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_MANAGER}
 ### 4. **Deploy all prerequisites**
 
 ```sh
-uv run ansible --version
+uv run ansible all -m ping
 ```
 
 <!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:
