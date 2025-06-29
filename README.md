@@ -54,17 +54,60 @@ graph LR
 
 ### 1. **Prepare Your Environment**
 
-Install **[uv][uv]**:
+Install **[Git][git]** and **[Git LFS][git-lfs]**, then clone the **[Cloud Skeleton][cloud-skeleton]** ► **[Prerequisites][prerequisites]** repository:
+
+```sh
+sudo apt update
+sudo apt install -y git git-lfs
+git clone https://github.com/cloud-skeleton/prerequisites.git /tmp/cloud-skeleton-prerequisites
+cd /tmp/cloud-skeleton-prerequisites
+```
+
+Install and configure **[uv][uv]** for **[Cloud Skeleton][cloud-skeleton]** ► **[Prerequisites][prerequisites]** dependencies management:
 
 ```sh
 wget -qO- https://astral.sh/uv/install.sh | sh
 export UV_LINK_MODE=copy
+export UV_ENV_FILE=".env .config.env"
 ```
 
-### 2. **Install Dependencies**
+### 2. **Configure The Scripts**
+
+Create `.config.env` file with the following content:
 
 ```sh
+NODE_INGRESS_WORKER=ingress-worker-1.cluster.${DOMAIN}
+NODE_MAIN_WORKER=main-worker-1.cluster.${DOMAIN}
+NODE_MANAGER=manager-1.cluster.${DOMAIN}
+SSH_KEY_FILE_PATH=~/.ssh/id_rsa
+SSH_USER=root
+```
 
+### 3. **Prepare Nodes For [SSH][ssh] connections**
+
+On **each node** log in as **root** and ensure **[SSH][ssh]** to root user is enabled:
+
+```sh
+cat > /etc/ssh/sshd_config.d/01-enable-root-login.conf <<'EOCONF'
+PermitRootLogin yes
+PasswordAuthentication yes
+EOCONF
+systemctl restart ssh
+```
+
+Upload your user **[SSH][ssh]** key file to all nodes:
+
+```sh
+. .config.env
+ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_INGRESS_WORKER}
+ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_MAIN_WORKER}
+ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_MANAGER}
+```
+
+### 4. **Deploy all prerequisites**
+
+```sh
+uv run ansible --version
 ```
 
 <!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:
