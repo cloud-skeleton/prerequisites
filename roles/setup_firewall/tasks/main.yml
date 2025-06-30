@@ -21,10 +21,10 @@
   name: Allow SSH from specified CIDRs
 
 - community.general.ufw:
-    from_ip: 224.0.0.0/4
     log: true
     proto: igmp
     rule: allow
+    to_ip: 224.0.0.0/4
   name: Allow IGMP on link-local multicast range
 
 - community.general.ufw:

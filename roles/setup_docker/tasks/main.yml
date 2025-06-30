@@ -1,3 +1,51 @@
 ---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: gnupg
+    state: latest
+    update_cache: true
+  name: Ensure GPG is installed
+
+- ansible.builtin.get_url:
+    dest: /etc/apt/keyrings/docker.asc
+    force: true
+    url: https://download.docker.com/linux/debian/gpg
+  name: Add Docker GPG apt key to the store
+
+- ansible.builtin.command:
+    cmd: dpkg --print-architecture
+  changed_when: false
+  name: Gather Debian package architecture
+  register: dpkg_arch
+
+- ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian {{ ansible_facts.lsb.codename }} stable
+  name: Configure Docker APT repository
+
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+    update_cache: true
+  name: Install Docker packages
+
+- ansible.builtin.user:
+    append: true
+    groups: docker
+    name: "{{ ansible_env.SUDO_USER }}"
+  name: Add invoking sudo user to docker group
 
 ...

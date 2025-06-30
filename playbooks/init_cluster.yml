@@ -3,8 +3,9 @@
   hosts: all
   name: Initialize Docker Swarm cluster
   roles:
-    - disable_pam_systemd
-    - configure_dns
-    - system_upgrade
-    - setup_firewall
+    # - disable_pam_systemd
+    # - configure_dns
+    # - system_upgrade
+    # - setup_firewall
+    - setup_docker
 ...

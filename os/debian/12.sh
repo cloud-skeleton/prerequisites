@@ -18,18 +18,18 @@
 # 	systemctl restart sshd
 # fi
 
-##### [ Setup firewall ] ##################################################
-apt install -y ufw
-for SSH_ALLOW_IP_CIDR in "${SSH_ALLOW_IP_CIDRS[@]}"; do
-	ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
-done
-ufw --force enable
+# ##### [ Setup firewall ] ##################################################
+# apt install -y ufw
+# for SSH_ALLOW_IP_CIDR in "${SSH_ALLOW_IP_CIDRS[@]}"; do
+# 	ufw allow from "${SSH_ALLOW_IP_CIDR}" to any port 22 proto tcp
+# done
+# ufw --force enable
 
-##### [ Create new user ] #################################################
-if [[ -n "${USER_NAME}" ]]; then
-	echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
-	echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
-fi
+# ##### [ Create new user ] #################################################
+# if [[ -n "${USER_NAME}" ]]; then
+# 	echo -e "${USER_PASSWORD}\n${USER_PASSWORD}" | adduser "${USER_NAME}" --comment ""
+# 	echo "${USER_NAME} ALL=(ALL:ALL) ALL" > "/etc/sudoers.d/${USER_NAME}"
+# fi
 
 ##### [ Setup Docker ] ####################################################
 curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
