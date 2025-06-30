@@ -1,0 +1,12 @@
+---
+- name: Set DNS nameservers in /etc/resolv.conf
+  ansible.builtin.blockinfile:
+    block: |
+      search localhost
+
+      {% for dns_nameserver in dns_nameservers %}
+      nameserver {{ dns_nameserver }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED DNS"
+    path: /etc/resolv.conf
+...

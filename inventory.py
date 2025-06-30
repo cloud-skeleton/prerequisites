@@ -24,13 +24,22 @@ def get_hosts(name: str) -> list[str]:
 def main() -> None:
     inventory: dict[str, Any] = {
         "ingress_worker": {
-            "hosts": get_hosts("NODE_INGRESS_WORKERS")
+            "hosts": get_hosts("NODE_INGRESS_WORKERS"),
+            "vars": {
+                "dns_nameservers": get_hosts("NODE_INGRESS_WORKERS_NAMESERVERS")
+            }
         },
         "main_worker": {
-            "hosts": get_hosts("NODE_MAIN_WORKERS")
+            "hosts": get_hosts("NODE_MAIN_WORKERS"),
+            "vars": {
+                "dns_nameservers": get_hosts("NODE_MAIN_WORKERS_NAMESERVERS")
+            }
         },
         "manager": {
-            "hosts": get_hosts("NODE_MANAGERS")
+            "hosts": get_hosts("NODE_MANAGERS"),
+            "vars": {
+                "dns_nameservers": get_hosts("NODE_MANAGERS_NAMESERVERS")
+            }
         },
         "all": {
             "vars": {

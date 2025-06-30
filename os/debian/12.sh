@@ -1,22 +1,22 @@
 #!/usr/bin/env -S bash -e -o pipefail
 
-##### [ Enable Quad9 nameservers ] ########################################
-cat << CONF > /etc/resolv.conf
-search localhost
+# ##### [ Enable Quad9 nameservers ] ########################################
+# cat << CONF > /etc/resolv.conf
+# search localhost
 
-nameserver 9.9.9.9
-nameserver 149.112.112.112
-CONF
+# nameserver 9.9.9.9
+# nameserver 149.112.112.112
+# CONF
 
 ##### [ Update packages ] #################################################
 apt update
 apt dist-upgrade -y
 
-##### [ WORKAROUND: stuck SSH connections ] ###############################
-if [ ! -f /sys/class/tty/tty0/active ]; then
-	sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
-	systemctl restart sshd
-fi
+# ##### [ WORKAROUND: stuck SSH connections ] ###############################
+# if [ ! -f /sys/class/tty/tty0/active ]; then
+# 	sed -i '/^[^#].*pam_systemd.so/ s/^/# /' /etc/pam.d/common-session
+# 	systemctl restart sshd
+# fi
 
 ##### [ Setup firewall ] ##################################################
 apt install -y ufw

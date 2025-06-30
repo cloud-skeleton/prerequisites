@@ -77,19 +77,24 @@ Create `.config.env` file with the following content (`NODE_INGRESS_WORKERS`, `N
 
 ```sh
 NODE_INGRESS_WORKERS="ingress-worker-1.cluster.${DOMAIN}"
+NODE_INGRESS_WORKERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 NODE_MAIN_WORKERS="main-worker-1.cluster.${DOMAIN}"
+NODE_MAIN_WORKERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 NODE_MANAGERS="manager-1.cluster.${DOMAIN}"
+NODE_MANAGERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 SSH_USER=root
 ```
 
 ### 3. **Prepare Nodes For [SSH][ssh] connections**
 
-On **each node** log in as **root** and create *Ansible* user:
+On **each node** log in as **root** and create *ansible* user:
 
 ```sh
 adduser ansible
-usermod -aG sudo ansible
+cat > /etc/sudoers.d/ansible << EOF
+ansible ALL=(ALL) NOPASSWD: ALL
+EOF
 ```
 
 Upload your **[SSH][ssh]** key file to all nodes:
@@ -119,6 +124,7 @@ uv run ansible-galaxy collection install -r requirements.yml
 
 ```sh
 uv run ansible all -m ping
+uv run ansible-playbook playbooks/init-cluster.yml --check --diff
 ```
 
 <!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:
