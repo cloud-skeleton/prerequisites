@@ -68,12 +68,12 @@ Install and configure **[uv][uv]** for **[Cloud Skeleton][cloud-skeleton]** ► 
 ```sh
 wget -qO- https://astral.sh/uv/install.sh | sh
 export UV_LINK_MODE=copy
-export UV_ENV_FILE=".env .config.env"
+export UV_ENV_FILE=.env
 ```
 
 ### 2. **Configure The Scripts**
 
-Create `.config.env` file with the following content (`NODE_INGRESS_WORKERS`, `NODE_MAIN_WORKERS` and `NODE_MANAGERS` are space separated lists of cluster nodes):
+Create `.env` file with the following content:
 
 ```sh
 NODE_INGRESS_WORKERS="ingress-worker-1.cluster.${DOMAIN}"
