@@ -8,9 +8,9 @@
 # nameserver 149.112.112.112
 # CONF
 
-##### [ Update packages ] #################################################
-apt update
-apt dist-upgrade -y
+# ##### [ Update packages ] #################################################
+# apt update
+# apt dist-upgrade -y
 
 # ##### [ WORKAROUND: stuck SSH connections ] ###############################
 # if [ ! -f /sys/class/tty/tty0/active ]; then

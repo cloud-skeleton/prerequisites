@@ -124,7 +124,7 @@ uv run ansible-galaxy collection install -r requirements.yml
 
 ```sh
 uv run ansible all -m ping
-uv run ansible-playbook playbooks/init-cluster.yml --check --diff
+uv run ansible-playbook playbooks/init_cluster.yml
 ```
 
 <!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:

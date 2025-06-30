@@ -5,4 +5,5 @@
   roles:
     - disable_pam_systemd
     - configure_dns
+    - system_upgrade
 ...
