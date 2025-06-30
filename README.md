@@ -73,38 +73,49 @@ export UV_ENV_FILE=".env .config.env"
 
 ### 2. **Configure The Scripts**
 
-Create `.config.env` file with the following content:
+Create `.config.env` file with the following content (`NODE_INGRESS_WORKERS`, `NODE_MAIN_WORKERS` and `NODE_MANAGERS` are space separated lists of cluster nodes):
 
 ```sh
-NODE_INGRESS_WORKER=ingress-worker-1.cluster.${DOMAIN}
-NODE_MAIN_WORKER=main-worker-1.cluster.${DOMAIN}
-NODE_MANAGER=manager-1.cluster.${DOMAIN}
+NODE_INGRESS_WORKERS="ingress-worker-1.cluster.${DOMAIN}"
+NODE_MAIN_WORKERS="main-worker-1.cluster.${DOMAIN}"
+NODE_MANAGERS="manager-1.cluster.${DOMAIN}"
 SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 SSH_USER=root
 ```
 
 ### 3. **Prepare Nodes For [SSH][ssh] connections**
 
-On **each node** log in as **root** and ensure **[SSH][ssh]** to root user is enabled:
+On **each node** log in as **root** and create *Ansible* user:
 
 ```sh
-cat > /etc/ssh/sshd_config.d/01-enable-root-login.conf <<'EOCONF'
-PermitRootLogin yes
-PasswordAuthentication yes
-EOCONF
-systemctl restart ssh
+adduser ansible
+usermod -aG sudo ansible
 ```
 
-Upload your user **[SSH][ssh]** key file to all nodes:
+Upload your **[SSH][ssh]** key file to all nodes:
 
 ```sh
 . .config.env
-ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_INGRESS_WORKER}
-ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_MAIN_WORKER}
-ssh-copy-id -i ${SSH_KEY_FILE_PATH}.pub ${SSH_USER}@${NODE_MANAGER}
+for NODE_INGRESS_WORKER in ${NODE_INGRESS_WORKERS}; do
+  ssh-copy-id -i "${SSH_KEY_FILE_PATH}.pub" "${SSH_USER}@${NODE_INGRESS_WORKER}"
+done
+for NODE_MAIN_WORKER in ${NODE_MAIN_WORKERS}; do
+  ssh-copy-id -i "${SSH_KEY_FILE_PATH}.pub" "${SSH_USER}@${NODE_MAIN_WORKER}"
+done
+for NODE_MANAGER in ${NODE_MANAGERS}; do
+  ssh-copy-id -i "${SSH_KEY_FILE_PATH}.pub" "${SSH_USER}@${NODE_MANAGER}"
+done
 ```
 
-### 4. **Deploy all prerequisites**
+<!-- ### 4. **Install Dependencies**
+
+Install [Ansible][ansible] plugins:
+
+```sh
+uv run ansible-galaxy collection install -r requirements.yml
+``` -->
+
+### 4. **Deploy All Prerequisites**
 
 ```sh
 uv run ansible all -m ping
@@ -226,6 +237,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 *This repository is maintained exclusively by the **[Cloud Skeleton][cloud-skeleton]** project, and it was developed by EU citizens who are strong proponents of the European Federation. 🇪🇺*
 
 <!-- Reference -->
+[ansible]: https://docs.ansible.com/ansible/latest/getting_started/index.html
 [cloud-skeleton]: https://github.com/cloud-skeleton/  
 [curl]: https://everything.curl.dev/  
 [data-storage]: https://github.com/cloud-skeleton/data-storage  
