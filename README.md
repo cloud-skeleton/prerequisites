@@ -84,6 +84,7 @@ NODE_MANAGERS="manager-1.cluster.${DOMAIN}"
 NODE_MANAGERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 SSH_USER=root
+SSH_ALLOW_IP_CIDRS="192.168.0.0/16 172.16.0.0/12 10.0.0.0/8"
 ```
 
 ### 3. **Prepare Nodes For [SSH][ssh] connections**
@@ -112,19 +113,19 @@ for NODE_MANAGER in ${NODE_MANAGERS}; do
 done
 ```
 
-<!-- ### 4. **Install Dependencies**
+### 4. **Install Dependencies**
 
 Install [Ansible][ansible] plugins:
 
 ```sh
 uv run ansible-galaxy collection install -r requirements.yml
-``` -->
+```
 
-### 4. **Deploy All Prerequisites**
+### 5. **Deploy All Prerequisites**
 
 ```sh
 uv run ansible all -m ping
-uv run ansible-playbook playbooks/init_cluster.yml
+uv run ansible-playbook playbooks/init_cluster.yml --diff
 ```
 
 <!-- On **each node**, log in as **root**, install **[Git][git]**, **[Git LFS][git-lfs]**, and **[Curl][curl]**, then clone the prerequisites repository:

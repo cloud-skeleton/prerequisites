@@ -1,0 +1,33 @@
+---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: ufw
+    state: latest
+    update_cache: true
+  name: Ensure UFW package is installed
+
+- community.general.ufw:
+    from_ip: "{{ ssh_allow_ip_cidr }}"
+    log: true
+    proto: tcp
+    rule: allow
+    to_port: 22
+  loop: "{{ ssh_allow_ip_cidrs }}"
+  loop_control:
+    loop_var: ssh_allow_ip_cidr
+  name: Allow SSH from specified CIDRs
+
+- community.general.ufw:
+    from_ip: 224.0.0.0/4
+    log: true
+    proto: igmp
+    rule: allow
+  name: Allow IGMP on link-local multicast range
+
+- community.general.ufw:
+    state: enabled
+  name: Enable UFW firewall
+...

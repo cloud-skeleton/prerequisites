@@ -6,4 +6,5 @@
     - disable_pam_systemd
     - configure_dns
     - system_upgrade
+    - setup_firewall
 ...

@@ -44,7 +44,8 @@ def main() -> None:
         "all": {
             "vars": {
                 "ansible_ssh_private_key_file": get_env("SSH_KEY_FILE_PATH"),
-                "ansible_user": get_env("SSH_USER")
+                "ansible_user": get_env("SSH_USER"),
+                "ssh_allow_ip_cidrs": get_hosts("SSH_ALLOW_IP_CIDRS")
             }
         },
         "_meta": {
