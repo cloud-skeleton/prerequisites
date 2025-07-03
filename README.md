@@ -24,15 +24,15 @@ graph LR
   external_client["<b>Client</b><br>🌐 Internet"]
 
   subgraph "<b>Network</b>"
-    subgraph "<b>Subnet</b><br><i>(Public)</i>"
+    subgraph "<b>Subnet</b> <i>(Public)</i>"
       ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
     end
 
-    subgraph "<b>Subnet A</b><br><i>(Private)</i>"
+    subgraph "<b>Subnet A</b> <i>(Private)</i>"
       manager["<b>Manager Node</b><br>🧐 Swarm Manager"]
     end
 
-    subgraph "<b>Subnet B</b><br><i>(Private)</i>"
+    subgraph "<b>Subnet B</b> <i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
     end
   end
