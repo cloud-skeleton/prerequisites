@@ -1,6 +1,6 @@
 ---
   - ansible.builtin.set_fact:
-      inventory_ips: >-
+      node_ips: >-
         {{
           ansible_play_hosts
           | map('extract', hostvars, 'ansible_default_ipv4')
@@ -16,14 +16,42 @@
       proto: "{{ proto }}"
       rule: allow
       to_port: "{{ port_no }}"
-    loop: "{{ lookup('nested', inventory_ips, docker_swarm_generic_ports | map('split', '/') | list) }}"
+    loop: "{{ query('nested', node_ips, docker_swarm_generic_ports | map('split', '/') | list) }}"
     loop_control:
       loop_var: rule
-    name: Allow generic Docker Swarm ports from all nodes
+    name: Allow generic Docker Swarm ports
     vars:
       ip: "{{ rule[0] }}"
       port_no: "{{ rule[1] }}"
       proto: "{{ rule[2] }}"
+
+  - ansible.builtin.set_fact:
+      manager_ips: >-
+        {{
+          groups['manager']
+          | map('extract', hostvars, 'ansible_default_ipv4')
+          | map(attribute='address')
+          | reject('equalto', ansible_default_ipv4.address)
+          | list
+        }}
+    name: Collect other manager node IPs
+    when: "'manager' in group_names"
+
+  - community.general.ufw:
+      from_ip: "{{ ip }}"
+      log: true
+      proto: "{{ proto }}"
+      rule: allow
+      to_port: "{{ port_no }}"
+    loop: "{{ query('nested', manager_ips, docker_swarm_manager_ports | map('split', '/') | list) }}"
+    loop_control:
+      loop_var: rule
+    name: Allow manager-only Docker Swarm ports
+    vars:
+      ip: "{{ rule[0] }}"
+      port_no: "{{ rule[1] }}"
+      proto: "{{ rule[2] }}"
+    when: "'manager' in group_names"
 
 # - ansible.builtin.command:
 #     cmd: your-token-generation-command
