@@ -118,7 +118,7 @@ done
 Install [Ansible][ansible] plugins:
 
 ```sh
-uv run ansible-galaxy collection install -r requirements.yml
+uv run ansible-galaxy collection install -Ur requirements.yml
 ```
 
 ### 5. **Deploy All Prerequisites**

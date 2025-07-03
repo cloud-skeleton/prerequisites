@@ -1,0 +1,9 @@
+---
+docker_swarm_generic_ports:
+  - 7946/tcp
+  - 7946/udp
+  - 4789/udp
+
+docker_swarm_manager_ports:
+  - 2377/tcp
+...
