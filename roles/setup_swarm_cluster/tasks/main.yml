@@ -1,74 +1,84 @@
 ---
-  - ansible.builtin.set_fact:
-      node_ips: >-
-        {{
-          ansible_play_hosts
-          | map('extract', hostvars, 'ansible_default_ipv4')
-          | map(attribute='address')
-          | reject('equalto', ansible_default_ipv4.address)
-          | list
-        }}
-    name: Collect other nodes IPs
+- ansible.builtin.set_fact:
+    node_ips: >-
+      {{
+        ansible_play_hosts
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address')
+        | reject('equalto', ansible_default_ipv4.address)
+        | list
+      }}
+  name: Collect other nodes IPs
 
-  - community.general.ufw:
-      from_ip: "{{ ip }}"
-      log: true
-      proto: "{{ proto }}"
-      rule: allow
-      to_port: "{{ port_no }}"
-    loop: "{{ query('nested', node_ips, docker_swarm_generic_ports | map('split', '/') | list) }}"
-    loop_control:
-      loop_var: rule
-    name: Allow generic Docker Swarm ports
-    vars:
-      ip: "{{ rule[0] }}"
-      port_no: "{{ rule[1] }}"
-      proto: "{{ rule[2] }}"
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', node_ips, docker_swarm_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow Docker Swarm ports
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
 
-  - ansible.builtin.set_fact:
-      manager_ips: >-
-        {{
-          groups['manager']
-          | map('extract', hostvars, 'ansible_default_ipv4')
-          | map(attribute='address')
-          | reject('equalto', ansible_default_ipv4.address)
-          | list
-        }}
-    name: Collect other manager node IPs
-    when: "'manager' in group_names"
+- community.docker.docker_swarm:
+    labels:
+      type: manager
+    validate_certs: true
+  name: Initialize Swarm if needed
+  register: swarm_init
+  when: inventory_hostname == groups['manager'][0]
 
-  - community.general.ufw:
-      from_ip: "{{ ip }}"
-      log: true
-      proto: "{{ proto }}"
-      rule: allow
-      to_port: "{{ port_no }}"
-    loop: "{{ query('nested', manager_ips, docker_swarm_manager_ports | map('split', '/') | list) }}"
-    loop_control:
-      loop_var: rule
-    name: Allow manager-only Docker Swarm ports
-    vars:
-      ip: "{{ rule[0] }}"
-      port_no: "{{ rule[1] }}"
-      proto: "{{ rule[2] }}"
-    when: "'manager' in group_names"
+- community.docker.docker_swarm_info:
+    validate_certs: true
+  name: Gather Swarm join tokens
+  register: swarm_info
+  when: inventory_hostname == groups['manager'][0]
 
-# - ansible.builtin.command:
-#     cmd: your-token-generation-command
-#   delegate_to: "{{ groups['manager'][0] }}"
-#   name: Get token from first manager
-#   register: cluster_token
-#   run_once: true
+- ansible.builtin.set_fact:
+    manager_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"
+    worker_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+  name: Distribute Swarm join tokens
+  when: inventory_hostname == groups['manager'][0]
 
-# - ansible.builtin.debug:
-#     msg: "This runs only on the first manager: {{ inventory_hostname }}"
-#   name: Notify first manager only
-#   when: inventory_hostname == groups['manager'][0]
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
+    labels:
+      type: manager
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as manager node
+  when:
+    - "'manager' in group_names"
+    - inventory_hostname != groups['manager'][0]
 
-# - ansible.builtin.debug:
-#     msg: "This runs on all managers except the first: {{ inventory_hostname }}"
-#   name: Notify all but first manager
-#   when:
-#     - "'manager' in group_names"
-#     - inventory_hostname != groups['manager'][0]
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
+    labels:
+      type: worker.ingress
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as ingress worker node
+  when:
+    - "'ingress_worker' in group_names"
+
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
+    labels:
+      type: worker.main
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as main worker node
+  when:
+    - "'main_worker' in group_names"
 ...
