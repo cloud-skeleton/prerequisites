@@ -1,0 +1,15 @@
+---
+
+
+# - ansible.builtin.debug:
+#     msg: "This runs only on the first manager: {{ inventory_hostname }}"
+#   name: Notify first manager only
+#   when: inventory_hostname == groups['manager'][0]
+
+# - ansible.builtin.debug:
+#     msg: "This runs on all managers except the first: {{ inventory_hostname }}"
+#   name: Notify all but first manager
+#   when:
+#     - "'manager' in group_names"
+#     - inventory_hostname != groups['manager'][0]
+...
