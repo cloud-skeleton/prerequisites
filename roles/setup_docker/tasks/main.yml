@@ -1,0 +1,81 @@
+---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: gnupg
+    state: latest
+    update_cache: true
+  name: Ensure GPG is installed
+
+- ansible.builtin.get_url:
+    dest: /etc/apt/keyrings/docker.asc
+    force: true
+    url: https://download.docker.com/linux/debian/gpg
+  name: Add Docker GPG apt key to the store
+
+- ansible.builtin.command:
+    cmd: dpkg --print-architecture
+  changed_when: false
+  name: Gather Debian package architecture
+  register: dpkg_arch
+
+- ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian {{ ansible_facts.lsb.codename }} stable
+  name: Configure Docker APT repository
+
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - python3-docker
+    state: latest
+    update_cache: true
+  name: Install Docker packages
+
+- ansible.builtin.user:
+    append: true
+    groups: docker
+    name: "{{ ansible_env.SUDO_USER }}"
+  name: Add invoking sudo user to docker group
+
+- ansible.builtin.blockinfile:
+    block: |
+      *filter
+      :ufw-user-forward - [0:0]
+      :DOCKER-USER - [0:0]
+      -A DOCKER-USER -j RETURN -s 10.0.0.0/8
+      -A DOCKER-USER -j RETURN -s 172.16.0.0/12
+      -A DOCKER-USER -j RETURN -s 192.168.0.0/16
+
+      -A DOCKER-USER -j ufw-user-forward
+
+      -A DOCKER-USER -j DROP -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -d 192.168.0.0/16
+      -A DOCKER-USER -j DROP -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -d 10.0.0.0/8
+      -A DOCKER-USER -j DROP -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -d 172.16.0.0/12
+      -A DOCKER-USER -j DROP -p udp -m udp --dport 0:32767 -d 192.168.0.0/16
+      -A DOCKER-USER -j DROP -p udp -m udp --dport 0:32767 -d 10.0.0.0/8
+      -A DOCKER-USER -j DROP -p udp -m udp --dport 0:32767 -d 172.16.0.0/12
+
+      -A DOCKER-USER -j RETURN
+      COMMIT
+    marker: "# {mark} UFW AND DOCKER"
+    path: /etc/ufw/after.rules
+  name: Append UFW rules for Docker networking
+  register: ufw_docker_rules
+
+- community.general.ufw:
+    state: reloaded
+  name: Reload UFW to apply Docker rules
+  when: ufw_docker_rules.changed
+...

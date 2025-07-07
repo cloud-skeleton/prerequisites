@@ -1,0 +1,9 @@
+[project]
+dependencies = [
+    "ansible-core==2.18.6"
+]
+description = "Cloud Skeleton prerequisites"
+name = "prerequisites"
+readme = "README.md"
+requires-python = ">=3.13"
+version = "1.0.0"

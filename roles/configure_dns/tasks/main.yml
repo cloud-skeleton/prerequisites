@@ -1,0 +1,35 @@
+---
+- ansible.builtin.stat:
+    follow: true
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+    path: /etc/dhcp/dhclient.conf
+  name: Detect whether dhclient is managing resolv.conf
+  register: dhcp_conf
+
+- ansible.builtin.blockinfile:
+    block: |
+      {% for dns_nameserver in dns_nameservers %}
+      nameserver {{ dns_nameserver }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED DNS"
+    path: /etc/resolv.conf
+  name: Set DNS nameservers in /etc/resolv.conf (static networks)
+  when: not dhcp_conf.stat.exists
+
+- ansible.builtin.blockinfile:
+    block: |
+      supersede domain-name-servers {{ dns_nameservers | join(', ') }};
+    marker: "# {mark} ANSIBLE DNS"
+    path: /etc/dhcp/dhclient.conf
+  name: Force DHCP client to use our DNS servers
+  register: dhcp_conf_patch
+  when: dhcp_conf.stat.exists
+
+- ansible.builtin.service:
+    name: networking
+    state: restarted
+  name: Restart networking to apply dhclient.conf changes
+  when: dhcp_conf_patch.changed
+...

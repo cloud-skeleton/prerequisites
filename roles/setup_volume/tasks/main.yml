@@ -1,0 +1,49 @@
+---
+# - ansible.builtin.apt:
+#     autoclean: true
+#     autoremove: true
+#     clean: true
+#     install_recommends: true
+#     name:
+#       - open-iscsi
+#       - lsscsi
+#       - sg3-utils
+#       - multipath-tools
+#       - scsitools
+#     state: latest
+#     update_cache: true
+#   name: Install democratic-csi dependancies
+
+# - ansible.builtin.blockinfile:
+#     block: |
+#       defaults {
+#         user_friendly_names yes
+#         find_multipaths yes
+#       }
+#     create: true
+#     marker: "# {mark} ENABLE MULTIPATHING"
+#     path: /etc/multipath.conf
+#   name: Enable multipathing
+#   register: multipath_config
+
+# - ansible.builtin.service:
+#     name: multipath-tools
+#     state: restarted
+#   name: Restart multipathing service to apply config changes
+#   when: multipath_config.changed
+
+- ansible.builtin.blockinfile:
+    block: |
+      defaults {
+        user_friendly_names yes
+        find_multipaths yes
+      }
+    create: true
+    marker: "# {mark} ENABLE MULTIPATHING"
+    path: /etc/multipath.conf
+  name: Enable multipathing
+  register: multipath_config
+
+# - community.docker.docker_plugin:
+#   name: Install Democratic CSI plugin
+...

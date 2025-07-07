@@ -1,0 +1,16 @@
+---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    purge: true
+    update_cache: true
+    upgrade: full
+  name: Perform upgrade of the packages
+  register: upgrade_result
+
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: upgrade_result.changed
+...
