@@ -1,13 +1,28 @@
 ---
+- community.docker.docker_plugin:
+    alias: democratic-csi-swarm
+    plugin_name: ghcr.io/cloud-skeleton/democratic-csi-swarm
+    state: present
+    validate_certs: true
+  name: Install Democratic CSI (Swarm version) plugin
+
 - ansible.builtin.copy:
     dest: /etc/democratic-csi.yml
     src: "{{ playbook_dir }}/../.csi.yml"
   name: Copy CSI configuration
+  register: csi_configuration
 
 - community.docker.docker_plugin:
-    alias: democratic-csi-swarm
-    plugin_name: ghcr.io/cloud-skeleton/democratic-csi-swarm
+    plugin_name: democratic-csi-swarm
+    state: disable
+    validate_certs: true
+  name: Disable Democratic CSI (Swarm version) plugin
+  when: csi_configuration.changed
+
+- community.docker.docker_plugin:
+    plugin_name: democratic-csi-swarm
     state: enable
     validate_certs: true
-  name: Install Democratic CSI (Swarm version) plugin
+  name: Enable Democratic CSI (Swarm version) plugin
+  when: csi_configuration.changed
 ...
