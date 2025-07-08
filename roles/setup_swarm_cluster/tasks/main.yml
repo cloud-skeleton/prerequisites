@@ -77,7 +77,7 @@
 - community.docker.docker_node:
     hostname: "{{ node }}"
     labels:
-      type: "{{ hostvars[node].group_names[0] }}"
+      type: "{{ hostvars[node].group_names[0] | replace('_','-') }}"
     labels_state: replace
     validate_certs: true
   loop: "{{ groups['all'] }}"
