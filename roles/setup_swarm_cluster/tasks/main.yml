@@ -25,6 +25,21 @@
     port_no: "{{ rule[1] }}"
     proto: "{{ rule[2] }}"
 
+- community.general.ufw:
+    from_ip: 0.0.0.0/0
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ ingress_worker_ports | map('split', '/') }}"
+  loop_control:
+    loop_var: rule
+  name: Allow ingress worker ports
+  vars:
+    port_no: "{{ rule[0] }}"
+    proto: "{{ rule[1] }}"
+  when: "'ingress_worker' in group_names"
+
 - community.docker.docker_swarm:
     validate_certs: true
   name: Initialize Swarm if needed

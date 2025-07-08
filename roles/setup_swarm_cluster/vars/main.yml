@@ -4,4 +4,8 @@ docker_swarm_ports:
   - 7946/udp
   - 4789/udp
   - 2377/tcp
+
+ingress_worker_ports:
+  - 80/tcp
+  - 443/tcp
 ...
