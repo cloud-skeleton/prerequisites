@@ -77,24 +77,25 @@ graph LR
   driver: synology-iscsi
 
   httpConnection:
-    protocol: https
     host: <HOSTNAME>
-    port: 443
-    username: <USERNAME>
     password: <PASSWORD>
-    session: democratic-csi
+    port: 443
+    protocol: https
     serialize: true
+    session: democratic-csi
+    username: <USERNAME>
 
   iscsi:
-    targetPortal: "<HOSTNAME>:3260"
-    baseiqn: "iqn.2025-07.<REVERSE DOMAIN>:democratic-csi."
-
+    baseiqn: iqn.2025-07.<REVERSE DOMAIN>:democratic-csi.
+    lunSnapshotTemplate:
+      is_app_consistent: true
+      is_locked: true
     lunTemplate:
       type: BLUN
-      
-    lunSnapshotTemplate:
-      is_locked: true
-      is_app_consistent: true
+    targetPortal: <HOSTNAME>
+    targetTemplate:
+      auth_type: 0
+      max_sessions: 0
   ```
 
   **Placeholder explanations:**
