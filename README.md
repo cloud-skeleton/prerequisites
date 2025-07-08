@@ -249,53 +249,6 @@ uv run ansible-playbook playbooks/main.yml --diff
 >   ```  
 > - If you need extra debugging information, include one or more `-v` flags (`-vvv` for maximum verbosity).
 
-<!-- 
-
----
-
-### 4. **Configure Persistent Volume ([NFS][nfs]-based)**
-
-To enable **shared, persistent storage** across your **[Docker Swarm][docker-swarm]** cluster, configure an **external [NFS][nfs] volume** that can be mounted by services on any node.
-
-You must have an accessible **[NFS][nfs]** server (e.g., a NAS or dedicated data node) exporting a directory for use by the cluster.
-
-> 🛠️ Don't have an **[NFS][nfs]** server?
->
-> If you don’t yet have a persistent storage server, see the dedicated repository:  
-> 👉 **[Cloud Skeleton][cloud-skeleton]** ► **[Data Storage][data-storage]**. It contains installation scripts and instructions for setting up a highly available **[NFS][nfs]** storage server that can be mounted from any node in your cluster.
-
-#### 🟩 Example: Create a shared **[NFS][nfs]** volume
-
-On any **[Docker Swarm][docker-swarm]** node, run the following (replacing the address and path with your setup):
-
-```sh
-docker volume create \
-    -d democratic-csi-swarm \
-    --group core \
-    --label eu.cloudskeleton.volume=true \
-    --label eu.cloudskeleton.volume.type=core \
-    --scope multi \
-    --sharing all \
-    --required-bytes 10737418240 \
-    --topology-required eu.cloudskeleton.node=true \
-    cloud-skeleton
-```
-
-This will create a volume named `storage` that services in your stack can mount like this:
-
-```yaml
-volumes:
-  - storage:/data/my-service
-```
-
-And in the `volumes` section of your `docker-compose.yml` or `stack.yml`:
-
-```yaml
-volumes:
-  storage:
-    external: true
-``` -->
-
 ---
 
 ## Contributing
