@@ -270,11 +270,15 @@ On any **[Docker Swarm][docker-swarm]** node, run the following (replacing the a
 
 ```sh
 docker volume create \
-  --driver local \
-  --opt type=nfs \
-  --opt o=addr=${NFS_SERVER_IP},rw \
-  --opt device=:/srv/data/cloud-skeleton \
-  storage
+    -d democratic-csi-swarm \
+    --group core \
+    --label eu.cloudskeleton.volume=true \
+    --label eu.cloudskeleton.volume.type=core \
+    --scope multi \
+    --sharing all \
+    --required-bytes 10737418240 \
+    --topology-required eu.cloudskeleton.node=true \
+    cloud-skeleton
 ```
 
 This will create a volume named `storage` that services in your stack can mount like this:
