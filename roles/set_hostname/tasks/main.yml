@@ -1,0 +1,11 @@
+---
+- ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  name: Set system hostname to inventory_hostname
+  register: hostname_change_result
+  when: inventory_hostname is not match('^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$')
+
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: hostname_change_result.changed
+...

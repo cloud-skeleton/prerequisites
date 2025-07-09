@@ -1,0 +1,24 @@
+---
+- ansible.builtin.stat:
+    follow: true
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+    path: /sys/class/tty/tty0/active
+  name: Check if /sys/class/tty/tty0/active exists
+  register: tty0_active
+
+- ansible.builtin.replace:
+    path: /etc/pam.d/common-session
+    regexp: "^session .+ pam_systemd\\.so$"
+    replace: "# \\g<0>"
+  name: Comment out pam_systemd in common-session if tty0 inactive
+  register: replace_pam_systemd
+  when: not tty0_active.stat.exists
+
+- ansible.builtin.service:
+    name: ssh
+    state: restarted
+  name: Restart sshd if pam_systemd was commented
+  when: replace_pam_systemd.changed
+...

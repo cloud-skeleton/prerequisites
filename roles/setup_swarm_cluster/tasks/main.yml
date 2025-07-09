@@ -1,0 +1,104 @@
+---
+- ansible.builtin.set_fact:
+    node_ips: >-
+      {{
+        ansible_play_hosts
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address')
+        | reject('equalto', ansible_default_ipv4.address)
+        | list
+      }}
+  name: Collect other nodes IPs
+
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', node_ips, docker_swarm_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow Docker Swarm ports
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+
+- community.general.ufw:
+    from_ip: 0.0.0.0/0
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ ingress_worker_ports | map('split', '/') }}"
+  loop_control:
+    loop_var: rule
+  name: Allow ingress worker ports
+  vars:
+    port_no: "{{ rule[0] }}"
+    proto: "{{ rule[1] }}"
+  when: "'ingress_worker' in group_names"
+
+- community.docker.docker_swarm:
+    validate_certs: true
+  name: Initialize Swarm if needed
+  register: swarm_init
+  when: inventory_hostname == groups['manager'][0]
+
+- community.docker.docker_swarm_info:
+    validate_certs: true
+  name: Gather Swarm join tokens
+  register: swarm_info
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.builtin.set_fact:
+    manager_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"
+    worker_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+  name: Distribute Swarm join tokens
+  when: inventory_hostname == groups['manager'][0]
+
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as manager node
+  when:
+    - "'manager' in group_names"
+    - inventory_hostname != groups['manager'][0]
+
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as ingress worker node
+  when:
+    - "'ingress_worker' in group_names"
+
+- community.docker.docker_swarm:
+    join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
+    remote_addrs:
+      - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+    state: join
+    validate_certs: true
+  name: Join Docker Swarm as main worker node
+  when:
+    - "'main_worker' in group_names"
+
+- community.docker.docker_node:
+    hostname: "{{ node }}"
+    labels:
+      eu.cloudskeleton.node: "true"
+      eu.cloudskeleton.node.type: "{{ hostvars[node].group_names[0] | replace('_','-') }}"
+    labels_state: replace
+    validate_certs: true
+  loop: "{{ groups['all'] }}"
+  loop_control:
+    loop_var: node
+  name: Label each node
+  when: inventory_hostname == groups['manager'][0]
+...
