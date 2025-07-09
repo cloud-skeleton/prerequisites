@@ -11,5 +11,4 @@
     - setup_docker
     - setup_swarm_cluster
     - setup_volume
-    # - install_dokploy
 ...
