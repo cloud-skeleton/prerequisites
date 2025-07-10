@@ -129,7 +129,7 @@ graph LR
   SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 
   # SSH user to connect as (single value)
-  SSH_USER=root
+  SSH_USER=ansible
 
   # CIDR ranges allowed to connect via SSH (space-separated list)
   SSH_ALLOW_IP_CIDRS="192.168.0.0/16 172.16.0.0/12 10.0.0.0/8"
