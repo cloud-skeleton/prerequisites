@@ -1,7 +1,19 @@
 ---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name:
+      - open-iscsi
+      - scsitools
+    state: latest
+    update_cache: true
+  name: Ensure CSI dependencies are installed
+
 - community.docker.docker_plugin:
     alias: democratic-csi-swarm
-    plugin_name: ghcr.io/cloud-skeleton/democratic-csi-swarm
+    plugin_name: ghcr.io/cloud-skeleton/democratic-csi-swarm:latest
     state: present
     validate_certs: true
   name: Install Democratic CSI (Swarm version) plugin
