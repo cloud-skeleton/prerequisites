@@ -96,6 +96,14 @@ graph LR
     targetTemplate:
       auth_type: 0
       max_sessions: 0
+
+  # Until merged https://github.com/democratic-csi/democratic-csi/pull/501
+  node:
+    format:
+      ext4:
+        customOptions:
+          - -E
+          - nodiscard
   ```
 
   **Placeholder explanations:**
