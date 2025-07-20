@@ -125,21 +125,11 @@
 
 - ansible.builtin.template:
     dest: /etc/nomad.d/nomad.hcl
-    group: nomad
+    group: "{{ 'root' if 'manager' in group_names else 'nomad' }}"
     mode: '0644'
-    owner: nomad
-    src: nomad-server.hcl.j2
-  name: Configure Nomad HCL as server
-  when: "'manager' in group_names"
-
-- ansible.builtin.template:
-    dest: /etc/nomad.d/nomad.hcl
-    group: root
-    mode: '0644'
-    owner: root
-    src: nomad-client.hcl.j2
-  name: Configure Nomad HCL as client
-  when: "'manager' not in group_names"
+    owner: "{{ 'root' if 'manager' in group_names else 'nomad' }}"
+    src: nomad.hcl.j2
+  name: Configure Nomad
 
 - ansible.builtin.template:
     dest: /lib/systemd/system/nomad.service

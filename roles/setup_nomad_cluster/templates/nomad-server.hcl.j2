@@ -1,8 +1,0 @@
-# Full configuration options can be found at https://developer.hashicorp.com/nomad/docs/configuration
-
-data_dir  = "/opt/nomad/data"
-
-server {
-    enabled          = true
-    bootstrap_expect = {{ groups['manager'] | length }}
-}

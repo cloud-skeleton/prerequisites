@@ -1,0 +1,19 @@
+data_dir  = "/opt/nomad/data"
+
+retry_join = [
+{% for host in groups['manager'] %}
+  "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+
+{% endfor %}
+]
+
+{% if 'manager' in group_names %}
+server {
+  enabled          = true
+  bootstrap_expect = {{ groups['manager'] | length }}
+}
+{% else %}
+client {
+  enabled = true
+}
+{% endif %}
