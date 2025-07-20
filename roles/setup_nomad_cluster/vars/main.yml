@@ -1,4 +1,9 @@
 ---
+ingress_worker_ports:
+  - 80/tcp
+  - 443/tcp
+  - 443/udp
+
 nomad_global_ports:
   - 4646/tcp
   - 4647/tcp
@@ -6,9 +11,4 @@ nomad_global_ports:
 nomad_server_ports:
   - 4648/tcp
   - 4648/udp
-
-# ingress_worker_ports:
-#   - 80/tcp
-#   - 443/tcp
-#   - 443/udp
 ...
