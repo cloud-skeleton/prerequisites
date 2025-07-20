@@ -136,18 +136,8 @@
     group: root
     mode: '0644'
     owner: root
-    src: nomad-server.service.j2
-  name: Configure Nomad service as server
-  when: "'manager' in group_names"
-
-- ansible.builtin.template:
-    dest: /lib/systemd/system/nomad.service
-    group: root
-    mode: '0644'
-    owner: root
-    src: nomad-client.service.j2
-  name: Configure Nomad service as client
-  when: "'manager' not in group_names"
+    src: nomad.service.j2
+  name: Configure Nomad service
 
 # - community.docker.docker_swarm:
 #     validate_certs: true

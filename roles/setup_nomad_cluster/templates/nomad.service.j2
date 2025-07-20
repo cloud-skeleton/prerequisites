@@ -28,8 +28,8 @@ After=network-online.target
 
 # Nomad clients need to be run as "root" whereas Nomad servers should be run as
 # the "nomad" user. Please change this if needed.
-User=nomad
-Group=nomad
+User={{ 'nomad' if 'manager' in group_names else 'root' }}
+Group={{ 'nomad' if 'manager' in group_names else 'root' }}
 
 Type=notify
 EnvironmentFile=-/etc/nomad.d/nomad.env
