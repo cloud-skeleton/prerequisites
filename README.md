@@ -250,14 +250,10 @@ uv run ansible all -m ping
 Once connectivity is confirmed, run your main playbook to configure all prerequisites:
 
 ```bash
-uv run ansible-playbook playbooks/main.yml --diff
+uv run ansible-playbook playbooks/main.yml
 ```
 
 > **Tip:**  
-> - You can add `--check` to perform a dry-run without making changes:
->   ```bash
->   uv run ansible-playbook playbooks/main.yml --check --diff
->   ```  
 > - If you need extra debugging information, include one or more `-v` flags (`-vvv` for maximum verbosity).
 
 ---
