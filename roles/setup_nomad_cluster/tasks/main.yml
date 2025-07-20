@@ -121,8 +121,9 @@
 - ansible.builtin.command:
     cmd: nomad -autocomplete-install
   become: false
-  changed_when: not nomad_completion_present
+  changed_when: false
   name: Add Nomad autocomplete configuration
+  when: not nomad_completion_present
 
 - ansible.builtin.copy:
     content: |
