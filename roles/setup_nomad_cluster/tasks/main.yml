@@ -67,16 +67,6 @@
     proto: "{{ rule[1] }}"
   when: "'ingress_worker' in group_names"
 
-- ansible.builtin.apt:
-    autoclean: true
-    autoremove: true
-    clean: true
-    install_recommends: true
-    name: gnupg
-    state: latest
-    update_cache: true
-  name: Ensure GPG is installed
-
 - ansible.builtin.get_url:
     dest: /etc/apt/keyrings/hashicorp.asc
     force: true
@@ -100,10 +90,18 @@
     autoremove: true
     clean: true
     install_recommends: true
-    name: nomad
+    name: 
+      - nomad
+      - python3-pip
     state: latest
     update_cache: true
-  name: Install Nomad package
+  name: Install Nomad dependencies packages
+
+- ansible.builtin.pip:
+    break_system_packages: true
+    executable: pip3
+    name: python-nomad
+  name: Install Nomad Python dependencies packages
 
 - ansible.builtin.slurp:
     src: /home/ansible/.bashrc
