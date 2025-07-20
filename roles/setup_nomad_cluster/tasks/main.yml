@@ -67,6 +67,44 @@
     proto: "{{ rule[1] }}"
   when: "'ingress_worker' in group_names"
 
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: gnupg
+    state: latest
+    update_cache: true
+  name: Ensure GPG is installed
+
+- ansible.builtin.get_url:
+    dest: /etc/apt/keyrings/hashicorp.asc
+    force: true
+    url: https://apt.releases.hashicorp.com/gpg
+  name: Add Hashicorp GPG apt key to the store
+
+- ansible.builtin.command:
+    cmd: dpkg --print-architecture
+  changed_when: false
+  name: Gather Debian package architecture
+  register: dpkg_arch
+
+- ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/hashicorp.asc]
+      https://apt.releases.hashicorp.com {{ ansible_facts.lsb.codename }} main
+  name: Configure Hashicorp APT repository
+
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: nomad
+    state: latest
+    update_cache: true
+  name: Install Nomad package
+
 # - community.docker.docker_swarm:
 #     validate_certs: true
 #   name: Initialize Swarm if needed
