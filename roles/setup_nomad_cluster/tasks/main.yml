@@ -105,6 +105,25 @@
     update_cache: true
   name: Install Nomad package
 
+- ansible.builtin.slurp:
+    src: /home/ansible/.bashrc
+  name: Read remote .bashrc into a variable
+  register: bashrc_file
+
+- ansible.builtin.set_fact:
+    nomad_completion_present: >
+      {{ 
+        ('complete -C /usr/bin/nomad nomad')
+        in (bashrc_file.content | b64decode)
+      }}
+  name: Check for existing Nomad autocomplete line in .bashrc
+
+- ansible.builtin.command:
+    cmd: nomad -autocomplete-install
+  become: false
+  changed_when: not nomad_completion_present
+  name: Add Nomad autocomplete configuration
+
 - ansible.builtin.copy:
     content: |
       [Unit]
