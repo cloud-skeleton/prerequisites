@@ -130,6 +130,7 @@
     owner: "{{ 'root' if 'manager' in group_names else 'nomad' }}"
     src: nomad.hcl.j2
   name: Configure Nomad
+  register: nomad_config
 
 - ansible.builtin.template:
     dest: /lib/systemd/system/nomad.service
@@ -138,6 +139,21 @@
     owner: root
     src: nomad.service.j2
   name: Configure Nomad service
+  register: nomad_service
+
+- ansible.builtin.service:
+    enabled: true
+    name: nomad
+    state: started
+  name: Start nomad
+
+- ansible.builtin.service:
+    name: nomad
+    state: restarted
+  name: Restart nomad if configuration or service has been changed
+  when:
+    - nomad_config.changed or nomad_service.changed
+    - inventory_hostname == groups['manager'][0]
 
 # - community.docker.docker_swarm:
 #     validate_certs: true
