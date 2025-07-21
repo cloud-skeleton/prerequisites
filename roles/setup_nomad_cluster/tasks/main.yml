@@ -1,14 +1,15 @@
 ---
 - ansible.builtin.set_fact:
-    node_ips: >-
+    worker_ips: >-
       {{
         ansible_play_hosts
+        | reject('in', groups['manager'])
         | map('extract', hostvars, 'ansible_default_ipv4')
         | map(attribute='address')
         | reject('equalto', ansible_default_ipv4.address)
         | list
       }}
-  name: Collect other nodes IPs
+  name: Collect other worker IPs
 
 - community.general.ufw:
     from_ip: "{{ ip }}"
@@ -16,14 +17,15 @@
     proto: "{{ proto }}"
     rule: allow
     to_port: "{{ port_no }}"
-  loop: "{{ query('nested', node_ips, nomad_global_ports | map('split', '/') | list) }}"
+  loop: "{{ query('nested', worker_ips, nomad_client_to_server_ports | map('split', '/') | list) }}"
   loop_control:
     loop_var: rule
-  name: Allow Nomad global ports
+  name: Allow Nomad client to server ports
   vars:
     ip: "{{ rule[0] }}"
     port_no: "{{ rule[1] }}"
     proto: "{{ rule[2] }}"
+  when: "'manager' in group_names"
 
 - ansible.builtin.set_fact:
     manager_ips: >-
@@ -42,10 +44,10 @@
     proto: "{{ proto }}"
     rule: allow
     to_port: "{{ port_no }}"
-  loop: "{{ query('nested', manager_ips, nomad_server_ports | map('split', '/') | list) }}"
+  loop: "{{ query('nested', manager_ips, nomad_server_to_server_ports | map('split', '/') | list) }}"
   loop_control:
     loop_var: rule
-  name: Allow Nomad server ports
+  name: Allow Nomad server to server ports
   vars:
     ip: "{{ rule[0] }}"
     port_no: "{{ rule[1] }}"
