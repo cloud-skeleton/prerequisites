@@ -151,7 +151,8 @@
     name: nomad
     state: restarted
   name: Restart nomad if configuration or service has been changed
-  when: nomad_config.changed or nomad_service.changed
+  when:
+    - nomad_config.changed or nomad_service.changed
 
 # - community.docker.docker_swarm:
 #     validate_certs: true
