@@ -6,10 +6,10 @@ server {
   bootstrap_expect = {{ groups['manager'] | length }}
   server_join {
     retry_join = [
-    {% for host in groups['manager'] %}
-      "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      {% for host in groups['manager'] -%}
+        "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      {%- endfor %}
 
-    {% endfor %}
     ]
   }
 }
@@ -18,10 +18,10 @@ client {
   enabled = true
   server_join {
     retry_join = [
-    {% for host in groups['manager'] %}
-      "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      {% for host in groups['manager'] -%}
+        "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      {%- endfor %}
 
-    {% endfor %}
     ]
   }
 }
