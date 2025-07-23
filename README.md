@@ -136,6 +136,9 @@ graph LR
   # DNS nameservers for managers (space-separated list)
   NODE_MANAGERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 
+  # CIDR ranges allowed to connect to Nomad server HTTP endpoints (space-separated list)
+  NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS="127.0.0.1/32"
+
   # SSH private key path (single value)
   SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 
@@ -165,6 +168,9 @@ graph LR
 
   - **`NODE_MANAGERS_NAMESERVERS`**  
     DNS servers to configure on each manager node.
+
+  - **`NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS`**  
+    A space-separated list of CIDR ranges allowed to connect to Nomad server HTTP endpoints.
 
   - **`SSH_KEY_FILE_PATH`**  
     Path (absolute or relative) to the **[SSH][ssh]** private key file used by **[Ansible][ansible]** to connect to all nodes.

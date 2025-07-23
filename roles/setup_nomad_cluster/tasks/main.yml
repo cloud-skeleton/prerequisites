@@ -55,6 +55,22 @@
   when: "'manager' in group_names"
 
 - community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', nomad_server_http_allow_ip_cidrs, nomad_server_admin_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow admin access to Nomad server HTTP endpoints
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+  when: "'manager' in group_names"
+
+- community.general.ufw:
     from_ip: 0.0.0.0/0
     log: true
     proto: "{{ proto }}"

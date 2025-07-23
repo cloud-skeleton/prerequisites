@@ -45,6 +45,7 @@ def main() -> None:
             "vars": {
                 "ansible_ssh_private_key_file": get_env("SSH_KEY_FILE_PATH"),
                 "ansible_user": get_env("SSH_USER"),
+                "nomad_server_http_allow_ip_cidrs": get_hosts("NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS"),
                 "ssh_allow_ip_cidrs": get_hosts("SSH_ALLOW_IP_CIDRS")
             }
         },
