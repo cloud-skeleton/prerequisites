@@ -200,6 +200,51 @@
     - inventory_hostname == groups['manager'][0]
     - bootstrap_token.changed
 
+- community.general.nomad_token:
+    global_replicated: true
+    host: localhost
+    name: nomad-client
+    policies:
+      - agent
+    state: present
+    token: "{{ nomad_bootstrap_token }}"
+    use_ssl: false
+  name: Create scoped "agent" token for clients
+  register: agent_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_client_token is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_client_token: "{{ agent_token.result.secret_id }}"
+  name: Cache the new client token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - agent_token.changed
+
+- community.general.nomad_token:
+    global_replicated: true
+    host: localhost
+    name: nomad-server
+    state: present
+    token: "{{ nomad_bootstrap_token }}"
+    token_type: management
+    use_ssl: false
+  name: Create scoped "management" token for servers
+  register: management_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_server_token is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_server_token: "{{ management_token.result.secret_id }}"
+  name: Cache the new server token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - management_token.changed
+
 # - ansible.builtin.blockinfile:
 #     block: |
 #       NOMAD_TOKEN={{ nomad_bootstrap_token }}
@@ -218,31 +263,6 @@
 #   when:
 #     - inventory_hostname == groups['manager'][0]
 #     - bootstrap_token.changed
-
-# - community.general.nomad_token:
-#     global_replicated: true
-#     host: localhost
-#     name: nomad-client
-#     policies:
-#       - agent
-#     state: present
-#     use_ssl: false
-#   name: Create scoped "agent" token for clients
-#   register: agent_token
-#   when: inventory_hostname == groups['manager'][0]
-
-# - community.general.nomad_token:
-#     global_replicated: true
-#     host: localhost
-#     name: nomad-server
-#     policies:
-#       - management
-#     state: present
-#     token_type: management
-#     use_ssl: false
-#   name: Create scoped "management" token for servers
-#   register: management_token
-#   when: inventory_hostname == groups['manager'][0]
 
 # - ansible.builtin.set_fact:
 #     manager_join_token: "{{ bootstrap_token.result.secret_id }}"
