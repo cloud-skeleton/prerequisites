@@ -163,30 +163,110 @@
   name: Configure Nomad service
   register: nomad_service
 
-- ansible.builtin.service:
+- ansible.builtin.systemd_service:
+    daemon_reload: true
     enabled: true
     name: nomad
     state: started
   name: Start nomad
 
-- ansible.builtin.service:
+- ansible.builtin.systemd_service:
+    daemon_reload: true
     name: nomad
     state: restarted
   name: Restart nomad if configuration or service has been changed
+  when: nomad_config.changed or nomad_service.changed
+
+- community.general.nomad_token:
+    global_replicated: true
+    host: localhost
+    state: present
+    token_type: bootstrap
+    use_ssl: false
+  failed_when:
+    - bootstrap_token is failed
+    - "'ACL bootstrap already done' not in (bootstrap_token.msg | default(''))"
+  name: Create Nomad ACL boostrap token
+  register: bootstrap_token
   when:
-    - nomad_config.changed or nomad_service.changed
+    - inventory_hostname == groups['manager'][0]
+    - nomad_bootstrap_token is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_bootstrap_token: "{{ bootstrap_token.result.secret_id }}"
+  name: Cache the new bootstrap token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - bootstrap_token.changed
+
+# - ansible.builtin.blockinfile:
+#     block: |
+#       NOMAD_TOKEN={{ nomad_bootstrap_token }}
+#     marker: "# {mark} ACL TOKEN"
+#     path: /etc/nomad.d/nomad.env
+#   name: Set Nomad ACL bootstrap token
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - bootstrap_token.changed
+
+# - ansible.builtin.systemd_service:
+#     daemon_reload: true
+#     name: nomad
+#     state: restarted
+#   name: Restart Nomad if ACL bootstrap token is set
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - bootstrap_token.changed
+
+# - community.general.nomad_token:
+#     global_replicated: true
+#     host: localhost
+#     name: nomad-client
+#     policies:
+#       - agent
+#     state: present
+#     use_ssl: false
+#   name: Create scoped "agent" token for clients
+#   register: agent_token
+#   when: inventory_hostname == groups['manager'][0]
+
+# - community.general.nomad_token:
+#     global_replicated: true
+#     host: localhost
+#     name: nomad-server
+#     policies:
+#       - management
+#     state: present
+#     token_type: management
+#     use_ssl: false
+#   name: Create scoped "management" token for servers
+#   register: management_token
+#   when: inventory_hostname == groups['manager'][0]
+
+# - ansible.builtin.set_fact:
+#     manager_join_token: "{{ bootstrap_token.result.secret_id }}"
+#   name: Distribute Nomad ACL boostrap token
+#   when: inventory_hostname == groups['manager'][0]
+
+# - ansible.builtin.lineinfile:
+#     create: yes
+#     group: root
+#     line: "NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
+#     mode: '0644'
+#     owner: root
+#     path: /etc/nomad.d/nomad.env
+#   name: Ensure NOMAD_TOKEN is in nomad.env
+#   when: "'manager' in group_names"
 
 # - community.docker.docker_swarm:
+#     join_token: "{{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
+#     remote_addrs:
+#       - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
+#     state: join
 #     validate_certs: true
-#   name: Initialize Swarm if needed
-#   register: swarm_init
-#   when: inventory_hostname == groups['manager'][0]
-
-# - community.docker.docker_swarm_info:
-#     validate_certs: true
-#   name: Gather Swarm join tokens
-#   register: swarm_info
-#   when: inventory_hostname == groups['manager'][0]
+#   name: Join Docker Swarm as manager node
+#   when: "'manager' in group_names"
 
 # - ansible.builtin.set_fact:
 #     manager_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"

@@ -1,3 +1,7 @@
+acl {
+  enabled = true
+}
+
 data_dir  = "/opt/nomad/data"
 
 {% if 'manager' in group_names %}server{% else %}client{% endif %} {
