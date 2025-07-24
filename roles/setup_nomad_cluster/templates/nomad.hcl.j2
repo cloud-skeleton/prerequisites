@@ -4,6 +4,10 @@ acl {
 
 {% if 'manager' not in group_names %}
 client {
+  // @TODO: Not yet sure if needed
+  // bridge_network_hairpin_mode = true
+  bridge_network_subnet = "{{ nomad_cluster_bridge_network_cidr }}"
+
   enabled = true
   node_class = "{{ group_names[0] | replace('_','-') }}"
   max_kill_timeout = "1m"

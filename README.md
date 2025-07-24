@@ -136,6 +136,9 @@ graph LR
   # DNS nameservers for managers (space-separated list)
   NODE_MANAGERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 
+  # CIDR range of bridge network used in Nomad cluster
+  NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR=10.0.0.0/20
+
   # CIDR ranges allowed to connect to Nomad server HTTP endpoints (space-separated list)
   NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS="127.0.0.1/32"
 
@@ -168,6 +171,9 @@ graph LR
 
   - **`NODE_MANAGERS_NAMESERVERS`**  
     DNS servers to configure on each manager node.
+
+  - **`NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR`**  
+    CIDR range of bridge network used in Nomad cluster.
 
   - **`NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS`**  
     A space-separated list of CIDR ranges allowed to connect to Nomad server HTTP endpoints.
