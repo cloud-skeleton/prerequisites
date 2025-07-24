@@ -141,12 +141,20 @@
   name: Add Nomad autocomplete configuration
   when: not nomad_completion_present
 
+- ansible.builtin.file:
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    path: /etc/nomad.d
+    state: directory
+  name: Setup Nomad config folder permissions
+
 - ansible.builtin.template:
     dest: /etc/nomad.d/nomad.hcl
-    group: "{{ 'root' if 'manager' in group_names else 'nomad' }}"
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     lstrip_blocks: true
-    mode: '0644'
-    owner: "{{ 'root' if 'manager' in group_names else 'nomad' }}"
+    mode: '0640'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     src: nomad.hcl.j2
     trim_blocks: true
   name: Configure Nomad
@@ -248,7 +256,10 @@
 - ansible.builtin.blockinfile:
     block: |
       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
+    group: nomad
     marker: "# {mark} ACL TOKEN"
+    mode: '0640'
+    owner: nomad
     path: /etc/nomad.d/nomad.env
   name: Set Nomad ACL server token
   register: server_nomad_env_file
@@ -257,7 +268,10 @@
 - ansible.builtin.blockinfile:
     block: |
       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
+    group: root
     marker: "# {mark} ACL TOKEN"
+    mode: '0640'
+    owner: root
     path: /etc/nomad.d/nomad.env
   name: Set Nomad ACL client token
   register: client_nomad_env_file
@@ -269,67 +283,6 @@
     state: restarted
   name: Restart Nomad if ACL token is set
   when: server_nomad_env_file.changed or client_nomad_env_file.changed
-
-# - ansible.builtin.set_fact:
-#     manager_join_token: "{{ bootstrap_token.result.secret_id }}"
-#   name: Distribute Nomad ACL boostrap token
-#   when: inventory_hostname == groups['manager'][0]
-
-# - ansible.builtin.lineinfile:
-#     create: yes
-#     group: root
-#     line: "NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
-#     mode: '0644'
-#     owner: root
-#     path: /etc/nomad.d/nomad.env
-#   name: Ensure NOMAD_TOKEN is in nomad.env
-#   when: "'manager' in group_names"
-
-# - community.docker.docker_swarm:
-#     join_token: "{{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
-#     remote_addrs:
-#       - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
-#     state: join
-#     validate_certs: true
-#   name: Join Docker Swarm as manager node
-#   when: "'manager' in group_names"
-
-# - ansible.builtin.set_fact:
-#     manager_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Manager }}"
-#     worker_join_token: "{{ swarm_info.swarm_facts.JoinTokens.Worker }}"
-#   name: Distribute Swarm join tokens
-#   when: inventory_hostname == groups['manager'][0]
-
-# - community.docker.docker_swarm:
-#     join_token: "{{ hostvars[groups['manager'][0]]['manager_join_token'] }}"
-#     remote_addrs:
-#       - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
-#     state: join
-#     validate_certs: true
-#   name: Join Docker Swarm as manager node
-#   when:
-#     - "'manager' in group_names"
-#     - inventory_hostname != groups['manager'][0]
-
-# - community.docker.docker_swarm:
-#     join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
-#     remote_addrs:
-#       - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
-#     state: join
-#     validate_certs: true
-#   name: Join Docker Swarm as ingress worker node
-#   when:
-#     - "'ingress_worker' in group_names"
-
-# - community.docker.docker_swarm:
-#     join_token: "{{ hostvars[groups['manager'][0]]['worker_join_token'] }}"
-#     remote_addrs:
-#       - "{{ hostvars[groups['manager'][0]].ansible_default_ipv4.address }}"
-#     state: join
-#     validate_certs: true
-#   name: Join Docker Swarm as main worker node
-#   when:
-#     - "'main_worker' in group_names"
 
 # - community.docker.docker_node:
 #     hostname: "{{ node }}"
