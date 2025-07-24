@@ -163,6 +163,7 @@
 - ansible.builtin.command:
     cmd: nomad config validate /etc/nomad.d
   name: Validate Nomad configuration
+  when: nomad_config.changed
 
 - ansible.builtin.template:
     dest: /lib/systemd/system/nomad.service

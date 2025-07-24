@@ -12,10 +12,21 @@ client {
     eu.cloudskeleton.node = true
   }
 
+  options = {
+    driver.allowlist = "docker"
+  }
+
+  reserved {
+    cpu = 200
+    disk = 4096
+    memory = 512
+    reserved_ports = "22"
+  }
+
   server_join {
     retry_join = [
       {% for host in groups['manager'] %}
-      "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      "{{ host }}"{% if not loop.last %},{% endif %}
 
       {% endfor %}
     ]
@@ -33,7 +44,7 @@ server {
   server_join {
     retry_join = [
       {% for host in groups['manager'] %}
-      "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+      "{{ host }}"{% if not loop.last %},{% endif %}
 
       {% endfor %}
     ]
