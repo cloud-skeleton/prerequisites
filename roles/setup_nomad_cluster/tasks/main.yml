@@ -160,6 +160,10 @@
   name: Configure Nomad
   register: nomad_config
 
+- ansible.builtin.command:
+    cmd: nomad config validate /etc/nomad.d
+  name: Validate Nomad configuration
+
 - ansible.builtin.template:
     dest: /lib/systemd/system/nomad.service
     group: root

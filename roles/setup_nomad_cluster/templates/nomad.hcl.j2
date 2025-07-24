@@ -2,12 +2,32 @@ acl {
   enabled = true
 }
 
+{% if 'manager' not in group_names %}
+client {
+  enabled = true
+  node_class = "{{ group_names[0] | replace('_','-') }}"
+  max_kill_timeout = "1m"
+
+  meta {
+    eu.cloudskeleton.node = true
+  }
+
+  server_join {
+    retry_join = [
+      {% for host in groups['manager'] %}
+      "{{ hostvars[host].ansible_default_ipv4.address }}"{% if not loop.last %},{% endif %}
+
+      {% endfor %}
+    ]
+  }
+}
+{% endif %}
+
 data_dir  = "/opt/nomad/data"
 
-{% if 'manager' in group_names %}server{% else %}client{% endif %} {
-  {% if 'manager' in group_names %}
+{% if 'manager' in group_names %}
+server {
   bootstrap_expect = {{ groups['manager'] | length }}
-  {% endif %}
   enabled = true
 
   server_join {
@@ -19,3 +39,4 @@ data_dir  = "/opt/nomad/data"
     ]
   }
 }
+{% endif %}
