@@ -4,9 +4,19 @@ acl {
 
 {% if 'manager' not in group_names %}
 client {
+  artifact {
+    decompression_file_count_limit = 10000
+    decompression_size_limit = "10G"
+    http_max_size = "5G"
+  }
+
   // @TODO: Not yet sure if needed
   // bridge_network_hairpin_mode = true
   bridge_network_subnet = "{{ nomad_cluster_bridge_network_cidr }}"
+
+  drain_on_shutdown {
+    deadline = "{{ nomad_client_drain_max_time }}"
+  }
 
   enabled = true
   node_class = "{{ group_names[0] | replace('_','-') }}"
@@ -21,7 +31,7 @@ client {
   }
 
   reserved {
-    cpu = 200
+    cpu = 400
     disk = 4096
     memory = 512
     reserved_ports = "22"
@@ -39,6 +49,9 @@ client {
 {% endif %}
 
 data_dir  = "/opt/nomad/data"
+{% if 'manager' not in group_names %}
+leave_on_interrupt = true
+{% endif %}
 
 {% if 'manager' in group_names %}
 server {

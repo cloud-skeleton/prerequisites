@@ -35,6 +35,10 @@ Type=notify
 EnvironmentFile=-/etc/nomad.d/nomad.env
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStart=/usr/bin/nomad agent -config /etc/nomad.d
+{% if 'manager' not in group_names %}
+ExecStartPost=/usr/bin/nc -z 127.0.0.1 4646
+ExecStartPost=/usr/bin/nomad node eligibility -self -enable
+{% endif %}
 KillMode=process
 KillSignal=SIGINT
 LimitNOFILE=65536
@@ -43,6 +47,10 @@ Restart=on-failure
 RestartSec=2
 
 TasksMax=infinity
+
+{% if 'manager' not in group_names %}
+TimeoutStopSec={{ nomad_client_drain_max_time }}
+{% endif %}
 
 # Nomad Server agents should never be force killed,
 # so here we disable OOM (out of memory) killing for this unit.

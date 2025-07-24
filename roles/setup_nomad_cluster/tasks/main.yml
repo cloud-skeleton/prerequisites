@@ -213,28 +213,79 @@
     - inventory_hostname == groups['manager'][0]
     - bootstrap_token.changed
 
+- ansible.builtin.file:
+    group: nomad
+    mode: '0750'
+    owner: nomad
+    path: /etc/nomad.d/policies
+    state: directory
+  name: Setup Nomad policies folder permissions
+  when: "'manager' in group_names"
+
+- ansible.builtin.copy:
+    content: |
+      node {
+        policy = "write"
+      }
+    dest: /etc/nomad.d/policies/allow-node-write.hcl
+    group: nomad
+    mode: '0640'
+    owner: nomad
+  name: Write out the "allow-node-write" policy HCL
+  register: allow_node_write_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      nomad acl policy apply -token {{ nomad_bootstrap_token }}
+      -description "Allow node write access" allow-node-write
+      /etc/nomad.d/policies/allow-node-write.hcl
+  name: Apply the "allow-node-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_node_write_policy.changed
+
+- ansible.builtin.copy:
+    content: |
+      agent {
+        policy = "read"
+      }
+    dest: /etc/nomad.d/policies/allow-agent-read.hcl
+    group: nomad
+    mode: '0640'
+    owner: nomad
+  name: Write out the "allow-agent-read" policy HCL
+  register: allow_agent_read_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      nomad acl policy apply -token {{ nomad_bootstrap_token }}
+      -description "Allow agent read access" allow-agent-read
+      /etc/nomad.d/policies/allow-agent-read.hcl
+  name: Apply the "allow-agent-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_agent_read_policy.changed
+
 - community.general.nomad_token:
     global_replicated: true
     host: localhost
     name: nomad-client
     policies:
-      - agent
+      - allow-agent-read
+      - allow-node-write
     state: present
     token: "{{ nomad_bootstrap_token }}"
     use_ssl: false
   name: Create scoped "agent" token for clients
   register: agent_token
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - nomad_client_token is not defined
+  when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.set_fact:
-    cacheable: true
     nomad_client_token: "{{ agent_token.result.secret_id }}"
-  name: Cache the new client token indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - agent_token.changed
+  name: Set client token
+  when: inventory_hostname == groups['manager'][0]
 
 - community.general.nomad_token:
     global_replicated: true
@@ -246,17 +297,12 @@
     use_ssl: false
   name: Create scoped "management" token for servers
   register: management_token
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - nomad_server_token is not defined
+  when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.set_fact:
-    cacheable: true
     nomad_server_token: "{{ management_token.result.secret_id }}"
-  name: Cache the new server token indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - management_token.changed
+  name: Set server token
+  when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.blockinfile:
     block: |
