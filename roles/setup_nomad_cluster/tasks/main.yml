@@ -245,24 +245,30 @@
     - inventory_hostname == groups['manager'][0]
     - management_token.changed
 
-# - ansible.builtin.blockinfile:
-#     block: |
-#       NOMAD_TOKEN={{ nomad_bootstrap_token }}
-#     marker: "# {mark} ACL TOKEN"
-#     path: /etc/nomad.d/nomad.env
-#   name: Set Nomad ACL bootstrap token
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - bootstrap_token.changed
+- ansible.builtin.blockinfile:
+    block: |
+      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
+    marker: "# {mark} ACL TOKEN"
+    path: /etc/nomad.d/nomad.env
+  name: Set Nomad ACL server token
+  register: server_nomad_env_file
+  when: "'manager' in group_names"
 
-# - ansible.builtin.systemd_service:
-#     daemon_reload: true
-#     name: nomad
-#     state: restarted
-#   name: Restart Nomad if ACL bootstrap token is set
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - bootstrap_token.changed
+- ansible.builtin.blockinfile:
+    block: |
+      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
+    marker: "# {mark} ACL TOKEN"
+    path: /etc/nomad.d/nomad.env
+  name: Set Nomad ACL client token
+  register: client_nomad_env_file
+  when: "'manager' not in group_names"
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: nomad
+    state: restarted
+  name: Restart Nomad if ACL token is set
+  when: server_nomad_env_file.changed or client_nomad_env_file.changed
 
 # - ansible.builtin.set_fact:
 #     manager_join_token: "{{ bootstrap_token.result.secret_id }}"
