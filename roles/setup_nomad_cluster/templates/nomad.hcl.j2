@@ -54,6 +54,9 @@ client {
 
 data_dir  = "/opt/nomad/data"
 datacenter = "{{ nomad_main_datacenter_name }}"
+disable_anonymous_signature = true
+disable_update_check = true
+enable_syslog = true
 {% if 'manager' not in group_names %}
 leave_on_interrupt = true
 {% endif %}
