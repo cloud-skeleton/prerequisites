@@ -181,14 +181,8 @@
     enabled: true
     name: nomad
     state: started
-  name: Start nomad
-
-- ansible.builtin.systemd_service:
-    daemon_reload: true
-    name: nomad
-    state: restarted
-  name: Restart nomad if configuration or service has been changed
-  when: nomad_config.changed or nomad_service.changed
+  name: Start first Nomad manager
+  when: inventory_hostname == groups['manager'][0]
 
 - community.general.nomad_token:
     global_replicated: true
@@ -196,9 +190,6 @@
     state: present
     token_type: bootstrap
     use_ssl: false
-  failed_when:
-    - bootstrap_token is failed
-    - "'ACL bootstrap already done' not in (bootstrap_token.msg | default(''))"
   name: Create Nomad ACL boostrap token
   register: bootstrap_token
   when:
@@ -280,12 +271,20 @@
     use_ssl: false
   name: Create scoped "agent" token for clients
   register: agent_token
-  when: inventory_hostname == groups['manager'][0]
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      nomad_client_token is not defined
+      or allow_agent_read_policy.changed
+      or allow_node_write_policy.changed
 
 - ansible.builtin.set_fact:
+    cacheable: true
     nomad_client_token: "{{ agent_token.result.secret_id }}"
-  name: Set client token
-  when: inventory_hostname == groups['manager'][0]
+  name: Cache the new client token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - agent_token.changed
 
 - community.general.nomad_token:
     global_replicated: true
@@ -297,12 +296,17 @@
     use_ssl: false
   name: Create scoped "management" token for servers
   register: management_token
-  when: inventory_hostname == groups['manager'][0]
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_server_token is not defined
 
 - ansible.builtin.set_fact:
+    cacheable: true
     nomad_server_token: "{{ management_token.result.secret_id }}"
-  name: Set server token
-  when: inventory_hostname == groups['manager'][0]
+  name: Cache the new server token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - management_token.changed
 
 - ansible.builtin.blockinfile:
     block: |
@@ -330,21 +334,19 @@
 
 - ansible.builtin.systemd_service:
     daemon_reload: true
+    enabled: true
+    name: nomad
+    state: started
+  name: Start all Nomad nodes
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
     name: nomad
     state: restarted
-  name: Restart Nomad if ACL token is set
-  when: server_nomad_env_file.changed or client_nomad_env_file.changed
-
-# - community.docker.docker_node:
-#     hostname: "{{ node }}"
-#     labels:
-#       eu.cloudskeleton.node: "true"
-#       eu.cloudskeleton.node.type: "{{ hostvars[node].group_names[0] | replace('_','-') }}"
-#     labels_state: replace
-#     validate_certs: true
-#   loop: "{{ groups['all'] }}"
-#   loop_control:
-#     loop_var: node
-#   name: Label each node
-#   when: inventory_hostname == groups['manager'][0]
+  name: Restart Nomad if configuration or service has been changed
+  when: >
+    nomad_config.changed
+    or nomad_service.changed
+    or server_nomad_env_file.changed
+    or client_nomad_env_file.changed
 ...
