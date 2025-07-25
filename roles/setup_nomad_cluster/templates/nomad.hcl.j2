@@ -66,6 +66,12 @@ server {
   bootstrap_expect = {{ groups['manager'] | length }}
   enabled = true
   encrypt = "{{ nomad_encryption_string }}"
+  // @TODO: investigate later
+  // oidc_issuer = ""
+
+  plan_rejection_tracker {
+    enabled = true
+  }
 
   server_join {
     retry_join = [
