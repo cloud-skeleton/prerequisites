@@ -139,6 +139,9 @@ graph LR
   # CIDR range of bridge network used in Nomad cluster
   NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR=10.0.0.0/20
 
+  # Name of main datacenter for Nomad cluster
+  NOMAD_MAIN_DATACENTER_NAME=home
+
   # CIDR ranges allowed to connect to Nomad server HTTP endpoints (space-separated list)
   NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS="127.0.0.1/32"
 
@@ -174,6 +177,9 @@ graph LR
 
   - **`NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR`**  
     CIDR range of bridge network used in Nomad cluster.
+
+  - **`NOMAD_MAIN_DATACENTER_NAME`**  
+    Name of main datacenter for Nomad cluster.
 
   - **`NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS`**  
     A space-separated list of CIDR ranges allowed to connect to Nomad server HTTP endpoints.

@@ -48,7 +48,12 @@ client {
 }
 {% endif %}
 
+// @TODO: Once consul is installed check this stanza
+// consul {
+// }
+
 data_dir  = "/opt/nomad/data"
+datacenter = "{{ nomad_main_datacenter_name }}"
 {% if 'manager' not in group_names %}
 leave_on_interrupt = true
 {% endif %}
