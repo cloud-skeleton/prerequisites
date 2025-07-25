@@ -65,6 +65,7 @@ leave_on_interrupt = true
 server {
   bootstrap_expect = {{ groups['manager'] | length }}
   enabled = true
+  encrypt = "{{ nomad_encryption_string }}"
 
   server_join {
     retry_join = [

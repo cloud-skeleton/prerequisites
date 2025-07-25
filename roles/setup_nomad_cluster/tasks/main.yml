@@ -149,6 +149,22 @@
     state: directory
   name: Setup Nomad config folder permissions
 
+- ansible.builtin.command:
+    cmd: openssl rand -base64 32
+  name: Generate 32 byte random string for encryption
+  register: encryption_string
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_encryption_string is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_encryption_string: "{{ encryption_string.stdout }}"
+  name: Cache the new 32 byte encryption string indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - encryption_string.changed
+
 - ansible.builtin.template:
     dest: /etc/nomad.d/nomad.hcl
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
