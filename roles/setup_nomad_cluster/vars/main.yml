@@ -1,4 +1,6 @@
 ---
+first_manager: "{{ groups['manager'][0] }}"
+
 ingress_worker_ports:
   - 80/tcp
   - 443/tcp
