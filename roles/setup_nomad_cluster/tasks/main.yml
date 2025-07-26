@@ -215,11 +215,14 @@
   when: inventory_hostname == groups['manager'][0]
 
 - community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
     global_replicated: true
     host: localhost
     state: present
     token_type: bootstrap
-    use_ssl: false
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
   name: Create Nomad ACL boostrap token
   register: bootstrap_token
   when:
@@ -261,6 +264,11 @@
       nomad acl policy apply -token {{ nomad_bootstrap_token }}
       -description "Allow node write access" allow-node-write
       /etc/nomad.d/policies/allow-node-write.hcl
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: /etc/nomad.d/certs/cluster.bijunu.lt-agent-ca.pem
+    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
   name: Apply the "allow-node-write" ACL policy
   when:
     - inventory_hostname == groups['manager'][0]
@@ -284,12 +292,19 @@
       nomad acl policy apply -token {{ nomad_bootstrap_token }}
       -description "Allow agent read access" allow-agent-read
       /etc/nomad.d/policies/allow-agent-read.hcl
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: /etc/nomad.d/certs/cluster.bijunu.lt-agent-ca.pem
+    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
   name: Apply the "allow-agent-read" ACL policy
   when:
     - inventory_hostname == groups['manager'][0]
     - allow_agent_read_policy.changed
 
 - community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
     global_replicated: true
     host: localhost
     name: nomad-client
@@ -298,7 +313,8 @@
       - allow-node-write
     state: present
     token: "{{ nomad_bootstrap_token }}"
-    use_ssl: false
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
   name: Create scoped "agent" token for clients
   register: agent_token
   when:
@@ -317,13 +333,16 @@
     - agent_token.changed
 
 - community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
     global_replicated: true
     host: localhost
     name: nomad-server
     state: present
     token: "{{ nomad_bootstrap_token }}"
     token_type: management
-    use_ssl: false
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
   name: Create scoped "management" token for servers
   register: management_token
   when:
