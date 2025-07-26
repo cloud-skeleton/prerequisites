@@ -1,4 +1,10 @@
 ---
+certificate_files:
+  ca_certificate: "/etc/nomad.d/certs/{{ certificate.domain_name }}-agent-ca.pem"
+  ca_private_key: "/etc/nomad.d/certs/{{ certificate.domain_name }}-agent-ca-key.pem"
+  local_ca_certificate: "{{ playbook_dir }}/../.cache/{{ certificate.domain_name }}-agent-ca.pem"
+  local_ca_private_key: "{{ playbook_dir }}/../.cache/{{ certificate.domain_name }}-agent-ca-key.pem"
+
 first_manager: "{{ groups['manager'][0] }}"
 
 ingress_worker_ports:
