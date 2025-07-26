@@ -147,6 +147,11 @@
     groups: nomad
     name: "{{ ansible_env.SUDO_USER }}"
   name: Add current user to nomad group
+  register: user_group
+
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: user_group.changed
 
 - ansible.builtin.file:
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
