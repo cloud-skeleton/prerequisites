@@ -148,10 +148,7 @@
     name: "{{ ansible_env.SUDO_USER }}"
   name: Add current user to nomad group
   register: user_group
-
-- ansible.builtin.reboot:
-  name: Reboot the server and wait for it to come back
-  when: user_group.changed
+  when: "'manager' not in group_names"
 
 - ansible.builtin.file:
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
@@ -236,6 +233,22 @@
   when:
     - inventory_hostname == groups['manager'][0]
     - bootstrap_token.changed
+
+- ansible.builtin.blockinfile:
+    block: |
+      export NOMAD_TOKEN={{ nomad_bootstrap_token }}
+      export NOMAD_ADDR=https://localhost:4646
+      export NOMAD_CACERT={{ certificate_files.ca_certificate }}
+      export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
+      export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
+    group: "{{ ansible_env.SUDO_USER }}"
+    marker: "# {mark} NOMAD ENV VARS"
+    mode: '0640'
+    owner: "{{ ansible_env.SUDO_USER }}"
+    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
+  name: Set Nomad environment variables in .bashrc
+  register: bashrc_nomad_vars
+  when: "'manager' in group_names"
 
 - ansible.builtin.file:
     group: nomad
@@ -398,4 +411,8 @@
     or nomad_service.changed
     or server_nomad_env_file.changed
     or client_nomad_env_file.changed
+
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: user_group.changed or bashrc_nomad_vars.changed
 ...
