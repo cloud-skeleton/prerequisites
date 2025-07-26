@@ -19,10 +19,29 @@
   name: Check for CA private key
   register: ca_private_key
 
-# - community.crypto.x509_certificate_info:
+- community.crypto.x509_certificate_info:
+    path: "{{ certificate_files.ca_certificate }}"
+    valid_at:
+      month: +1m
+  name: Get CA certificate data
+  register: ca_certificate_data
+  when: ca_certificate.stat.exists
 
-#   name: Get CA certificate data
-#   when: ca_certificate.stat.exists
+- ansible.builtin.file:
+    path: "{{ certificate_files.ca_private_key }}"
+    state: absent
+  name: Remove Nomad CA private key if certificate expires soon
+  when:
+    - ca_private_key.stat.exists
+    - not ca_certificate_data.valid_at.month
+
+- ansible.builtin.file:
+    path: "{{ certificate_files.ca_certificate }}"
+    state: absent
+  name: Remove Nomad CA certificate if expires soon
+  when:
+    - ca_certificate.stat.exists
+    - not ca_certificate_data.valid_at.month
 
 - ansible.builtin.command:
     cmd: >
@@ -45,6 +64,7 @@
   when: >
     not ca_certificate.stat.exists
     or not ca_private_key.stat.exists
+    or not ca_certificate_data.valid_at.month
 
 - ansible.builtin.fetch:
     dest: "{{ certificate_files.local_ca_certificate }}"
