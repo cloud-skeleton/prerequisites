@@ -142,6 +142,12 @@
   name: Add Nomad autocomplete configuration
   when: not nomad_completion_present
 
+- ansible.builtin.user:
+    append: true
+    groups: nomad
+    name: "{{ ansible_env.SUDO_USER }}"
+  name: Add current user to nomad group
+
 - ansible.builtin.file:
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     mode: '0750'

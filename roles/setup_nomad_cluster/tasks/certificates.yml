@@ -270,4 +270,90 @@
     owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     src: "{{ certificate_files.client_private_key_local }}"
   name: Copy Nomad client's private key from cache
+
+- ansible.builtin.stat:
+    path: "{{ certificate_files.cli_certificate }}"
+  delegate_to: "{{ first_manager }}"
+  name: Check for CLI certificate
+  register: cli_certificate
+
+- ansible.builtin.stat:
+    path: "{{ certificate_files.cli_private_key }}"
+  delegate_to: "{{ first_manager }}"
+  name: Check for CLI private key
+  register: cli_private_key
+
+- community.crypto.x509_certificate_info:
+    path: "{{ certificate_files.cli_certificate }}"
+    valid_at:
+      month: +1m
+  delegate_to: "{{ first_manager }}"
+  name: Get CLI certificate data
+  register: cli_certificate_data
+  when: cli_certificate.stat.exists
+
+- ansible.builtin.file:
+    path: "{{ certificate_files.cli_private_key }}"
+    state: absent
+  delegate_to: "{{ first_manager }}"
+  name: Remove Nomad CLI private key if certificate expires soon
+  when:
+    - cli_private_key.stat.exists
+    - not cli_certificate_data.valid_at.month
+
+- ansible.builtin.file:
+    path: "{{ certificate_files.cli_certificate }}"
+    state: absent
+  delegate_to: "{{ first_manager }}"
+  name: Remove Nomad CLI certificate if expires soon
+  when:
+    - cli_certificate.stat.exists
+    - not cli_certificate_data.valid_at.month
+
+- ansible.builtin.command:
+    cmd: >
+      nomad tls cert create
+        {{ '-additional-ipaddress ' ~ (ansible_all_ipv4_addresses | join(' -additional-ipaddress ')) }}
+        -cli
+        -domain {{ certificate.domain_name }}
+  args:
+    chdir: /etc/nomad.d/certs
+  delegate_to: "{{ first_manager }}"
+  name: Generate Nomad CLI private key and certificate
+  when: >
+    not cli_certificate.stat.exists
+    or not cli_private_key.stat.exists
+    or not cli_certificate_data.valid_at.month
+
+- ansible.builtin.fetch:
+    dest: "{{ certificate_files.cli_certificate_local }}"
+    flat: true
+    src: "{{ certificate_files.cli_certificate }}"
+  delegate_to: "{{ first_manager }}"
+  name: Copy Nomad CLI's certificate to cache
+
+- ansible.builtin.fetch:
+    dest: "{{ certificate_files.cli_private_key_local }}"
+    flat: true
+    src: "{{ certificate_files.cli_private_key }}"
+  delegate_to: "{{ first_manager }}"
+  name: Copy Nomad CLI's private key to cache
+
+- ansible.builtin.copy:
+    dest: "{{ certificate_files.cli_certificate }}"
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    src: "{{ certificate_files.cli_certificate_local }}"
+  name: Copy Nomad CLI's certificate from cache
+  when: "'manager' in group_names"
+
+- ansible.builtin.copy:
+    dest: "{{ certificate_files.cli_private_key }}"
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    src: "{{ certificate_files.cli_private_key_local }}"
+  name: Copy Nomad CLI's private key from cache
+  when: "'manager' in group_names"
 ...
