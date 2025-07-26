@@ -165,6 +165,8 @@
     - inventory_hostname == groups['manager'][0]
     - encryption_string.changed
 
+- import_tasks: certificates.yml
+
 - ansible.builtin.template:
     dest: /etc/nomad.d/nomad.hcl
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"

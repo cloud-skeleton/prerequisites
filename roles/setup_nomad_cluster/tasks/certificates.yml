@@ -1,0 +1,74 @@
+---
+- ansible.builtin.file:
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    path: /etc/nomad.d/certs
+    state: directory
+  name: Setup Nomad certificates folder permissions
+
+- ansible.builtin.stat:
+    path: "/etc/nomad.d/certs/{{ inventory_hostname.split('.')[1:] | join('.') }}-agent-ca.pem"
+  delegate_to: "{{ groups['manager'][0] }}"
+  name: Check for CA certificate
+  register: ca_certificate
+
+- ansible.builtin.stat:
+    path: "/etc/nomad.d/certs/{{ inventory_hostname.split('.')[1:] | join('.') }}-agent-ca-key.pem"
+  delegate_to: "{{ groups['manager'][0] }}"
+  name: Check for CA private key
+  register: ca_private_key
+
+- ansible.builtin.command:
+    cmd: >
+      nomad tls ca create
+        -common-name "Cloud Skeleton CA"
+        -country EU
+        -days 365
+        -domain "{{ inventory_hostname.split('.') [1:] | join('.') }}"
+        -locality Brussels
+        -name-constraint
+        -organization "Cloud Skeleton"
+        -organizational-unit "Nomad Cluster"
+        -postal-code 1049
+        -province Brussels
+        -street-address "Rue de la Loi 200"
+  args:
+    chdir: /etc/nomad.d/certs
+  delegate_to: "{{ groups['manager'][0] }}"
+  name: Generate Nomad CA's private key and certificate
+  when:
+    - not ca_certificate.stat.exists
+    - not ca_private_key.stat.exists
+
+- ansible.builtin.fetch:
+    dest: "{{ playbook_dir }}/../.cache/"
+    flat: true
+    src: "/etc/nomad.d/certs/{{ inventory_hostname.split('.') [1:] | join('.') }}-agent-ca.pem"
+  delegate_to: "{{ groups['manager'][0] }}"
+  name: Copy Nomad CA's certificate to cache
+
+- ansible.builtin.fetch:
+    dest: "{{ playbook_dir }}/../.cache/"
+    flat: true
+    src: "/etc/nomad.d/certs/{{ inventory_hostname.split('.') [1:] | join('.') }}-agent-ca-key.pem"
+  delegate_to: "{{ groups['manager'][0] }}"
+  name: Copy Nomad CA's private key to cache
+
+- ansible.builtin.copy:
+    dest: /etc/nomad.d/certs/
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    src: "{{ playbook_dir }}/../.cache/{{ inventory_hostname.split('.') [1:] | join('.') }}-agent-ca.pem"
+  name: Copy Nomad CA's certificate from cache
+
+- ansible.builtin.copy:
+    dest: /etc/nomad.d/certs/
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    mode: '0750'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    src: "{{ playbook_dir }}/../.cache/{{ inventory_hostname.split('.') [1:] | join('.') }}-agent-ca-key.pem"
+  name: Copy Nomad CA's private key from cache
+  when: "'manager' in group_names"
+...
