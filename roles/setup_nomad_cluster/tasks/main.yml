@@ -150,7 +150,7 @@
   name: Setup Nomad config folder permissions
 
 - ansible.builtin.command:
-    cmd: openssl rand -base64 32
+    cmd: nomad operator gossip keyring generate
   name: Generate 32 byte random string for encryption
   register: encryption_string
   when:
