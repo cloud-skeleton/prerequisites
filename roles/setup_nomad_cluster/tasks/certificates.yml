@@ -17,45 +17,6 @@
         private_key: "{{ certificate_files.ca_private_key }}"
     when: inventory_hostname == first_manager
 
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.ca_certificate }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for CA certificate
-#       register: ca_certificate
-
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.ca_private_key }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for CA private key
-#       register: ca_private_key
-
-#     - community.crypto.x509_certificate_info:
-#         path: "{{ certificate_files.ca_certificate }}"
-#         valid_at:
-#           month: +1m
-#       delegate_to: "{{ first_manager }}"
-#       name: Get CA certificate data
-#       register: ca_certificate_data
-#       when: ca_certificate.stat.exists
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.ca_private_key }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad CA private key if certificate expires soon
-#       when:
-#         - ca_private_key.stat.exists
-#         - not ca_certificate_data.valid_at.month
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.ca_certificate }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad CA certificate if expires soon
-#       when:
-#         - ca_certificate.stat.exists
-#         - not ca_certificate_data.valid_at.month
-
 #     - ansible.builtin.command:
 #         cmd: >
 #           nomad tls ca create
@@ -122,51 +83,6 @@
         private_key: "{{ certificate_files.server_private_key }}"
     when: inventory_hostname == first_manager
 
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.server_certificate }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for server certificate
-#       register: server_certificate
-
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.server_private_key }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for server private key
-#       register: server_private_key
-
-#     - community.crypto.x509_certificate_info:
-#         path: "{{ certificate_files.server_certificate }}"
-#         valid_at:
-#           month: +1m
-#       delegate_to: "{{ first_manager }}"
-#       name: Get server certificate data
-#       register: server_certificate_data
-#       when: server_certificate.stat.exists
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.server_private_key }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad server private key if certificate expires soon
-#       when:
-#         - server_private_key.stat.exists
-#         - >
-#           not server_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.server_certificate }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad server certificate if expires soon
-#       when:
-#         - server_certificate.stat.exists
-#         - >
-#           not server_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
-
 #     - ansible.builtin.command:
 #         cmd: >
 #           nomad tls cert create
@@ -227,51 +143,6 @@
         private_key: "{{ certificate_files.client_private_key }}"
     when: inventory_hostname == first_manager
 
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.client_certificate }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for client certificate
-#       register: client_certificate
-
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.client_private_key }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for client private key
-#       register: client_private_key
-
-#     - community.crypto.x509_certificate_info:
-#         path: "{{ certificate_files.client_certificate }}"
-#         valid_at:
-#           month: +1m
-#       delegate_to: "{{ first_manager }}"
-#       name: Get client certificate data
-#       register: client_certificate_data
-#       when: client_certificate.stat.exists
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.client_private_key }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad client private key if certificate expires soon
-#       when:
-#         - client_private_key.stat.exists
-#         - >
-#           not client_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.client_certificate }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad client certificate if expires soon
-#       when:
-#         - client_certificate.stat.exists
-#         - >
-#           not client_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
-
 #     - ansible.builtin.command:
 #         cmd: >
 #           nomad tls cert create
@@ -328,51 +199,6 @@
         certificate: "{{ certificate_files.cli_certificate }}"
         private_key: "{{ certificate_files.cli_private_key }}"
     when: inventory_hostname == first_manager
-
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.cli_certificate }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for CLI certificate
-#       register: cli_certificate
-
-#     - ansible.builtin.stat:
-#         path: "{{ certificate_files.cli_private_key }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Check for CLI private key
-#       register: cli_private_key
-
-#     - community.crypto.x509_certificate_info:
-#         path: "{{ certificate_files.cli_certificate }}"
-#         valid_at:
-#           month: +1m
-#       delegate_to: "{{ first_manager }}"
-#       name: Get CLI certificate data
-#       register: cli_certificate_data
-#       when: cli_certificate.stat.exists
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.cli_private_key }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad CLI private key if certificate expires soon
-#       when:
-#         - cli_private_key.stat.exists
-#         - >
-#           not cli_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
-
-#     - ansible.builtin.file:
-#         path: "{{ certificate_files.cli_certificate }}"
-#         state: absent
-#       delegate_to: "{{ first_manager }}"
-#       name: Remove Nomad CLI certificate if expires soon
-#       when:
-#         - cli_certificate.stat.exists
-#         - >
-#           not cli_certificate_data.valid_at.month
-#           or ca_certificate_gen.changed
-#           or node_ips.changed
 
 #     - ansible.builtin.command:
 #         cmd: >

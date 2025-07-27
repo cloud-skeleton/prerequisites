@@ -5,12 +5,6 @@
     register: certificate_file
     when: not force_remove
 
-  - ansible.builtin.stat:
-      path: "{{ paths.private_key }}"
-    name: Get private key file properties
-    register: private_key_file
-    when: not force_remove
-
   - community.crypto.x509_certificate_info:
       path: "{{ paths.certificate }}"
       valid_at:
@@ -24,16 +18,16 @@
   - ansible.builtin.file:
       path: "{{ paths.certificate }}"
       state: absent
-    name: Remove certificate if expires soon
+    name: Remove certificate if expires soon or forced removal
     when: >
-      force_remove
-      or (certificate_file.stat.exists and certificate_data.valid_at.month)
+      certificate_data.skipped
+      or not certificate_data.valid_at.month
 
   - ansible.builtin.file:
       path: "{{ paths.private_key }}"
       state: absent
-    name: Remove private key if certificate expires soon
+    name: Remove private key if certificate expires soon or forced removal
     when: >
-      force_remove
-      or (private_key_file.stat.exists and certificate_data.valid_at.month)
+      certificate_data.skipped
+      or not certificate_data.valid_at.month
 ...
