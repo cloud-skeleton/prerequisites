@@ -33,18 +33,14 @@
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad CA private key if certificate expires soon
-  when:
-    - ca_private_key.stat.exists
-    - not ca_certificate_data.valid_at.month
+  when: not ca_certificate_data.valid_at.month
 
 - ansible.builtin.file:
     path: "{{ certificate_files.ca_certificate }}"
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad CA certificate if expires soon
-  when:
-    - ca_certificate.stat.exists
-    - not ca_certificate_data.valid_at.month
+  when: not ca_certificate_data.valid_at.month
 
 - ansible.builtin.command:
     cmd: >
@@ -64,6 +60,7 @@
     chdir: /etc/nomad.d/certs
   delegate_to: "{{ first_manager }}"
   name: Generate Nomad CA's private key and certificate
+  register: ca_certificate_gen
   when: >
     not ca_certificate.stat.exists
     or not ca_private_key.stat.exists
@@ -126,18 +123,18 @@
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad server private key if certificate expires soon
-  when:
-    - server_private_key.stat.exists
-    - not server_certificate_data.valid_at.month
+  when: >
+    not server_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.file:
     path: "{{ certificate_files.server_certificate }}"
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad server certificate if expires soon
-  when:
-    - server_certificate.stat.exists
-    - not server_certificate_data.valid_at.month
+  when: >
+    not server_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.command:
     cmd: >
@@ -154,6 +151,7 @@
     not server_certificate.stat.exists
     or not server_private_key.stat.exists
     or not server_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.fetch:
     dest: "{{ certificate_files.server_certificate_local }}"
@@ -213,18 +211,18 @@
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad client private key if certificate expires soon
-  when:
-    - client_private_key.stat.exists
-    - not client_certificate_data.valid_at.month
+  when: >
+    not client_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.file:
     path: "{{ certificate_files.client_certificate }}"
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad client certificate if expires soon
-  when:
-    - client_certificate.stat.exists
-    - not client_certificate_data.valid_at.month
+  when: >
+    not client_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.command:
     cmd: >
@@ -240,6 +238,7 @@
     not client_certificate.stat.exists
     or not client_private_key.stat.exists
     or not client_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.fetch:
     dest: "{{ certificate_files.client_certificate_local }}"
@@ -297,18 +296,18 @@
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad CLI private key if certificate expires soon
-  when:
-    - cli_private_key.stat.exists
-    - not cli_certificate_data.valid_at.month
+  when: >
+    not cli_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.file:
     path: "{{ certificate_files.cli_certificate }}"
     state: absent
   delegate_to: "{{ first_manager }}"
   name: Remove Nomad CLI certificate if expires soon
-  when:
-    - cli_certificate.stat.exists
-    - not cli_certificate_data.valid_at.month
+  when: >
+    not cli_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.command:
     cmd: >
@@ -324,6 +323,7 @@
     not cli_certificate.stat.exists
     or not cli_private_key.stat.exists
     or not cli_certificate_data.valid_at.month
+    or ca_certificate_gen.changed
 
 - ansible.builtin.fetch:
     dest: "{{ certificate_files.cli_certificate_local }}"
