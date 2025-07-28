@@ -247,208 +247,209 @@
       or nomad_service.changed
       or certificates_updated
 
-# - community.general.nomad_token:
-#     client_cert: "{{ certificate_files.cli_certificate }}"
-#     client_key: "{{ certificate_files.cli_private_key }}"
-#     global_replicated: true
-#     host: localhost
-#     state: present
-#     token_type: bootstrap
-#   environment:
-#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-#   name: Create Nomad ACL boostrap token
-#   register: bootstrap_token
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - nomad_bootstrap_token is not defined
+- community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
+    global_replicated: true
+    host: localhost
+    state: present
+    token_type: bootstrap
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+  name: Create Nomad ACL boostrap token
+  register: bootstrap_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_bootstrap_token is not defined
 
-# - ansible.builtin.set_fact:
-#     cacheable: true
-#     nomad_bootstrap_token: "{{ bootstrap_token.result.secret_id }}"
-#   name: Cache the new bootstrap token indefinitely
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - bootstrap_token.changed
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_bootstrap_token: "{{ bootstrap_token.result.secret_id }}"
+  name: Cache the new bootstrap token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - bootstrap_token.changed
 
-# - ansible.builtin.blockinfile:
-#     block: |
-#       export NOMAD_TOKEN={{ nomad_bootstrap_token }}
-#       export NOMAD_ADDR=https://localhost:4646
-#       export NOMAD_CACERT={{ certificate_files.ca_certificate }}
-#       export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
-#       export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
-#     group: "{{ ansible_env.SUDO_USER }}"
-#     marker: "# {mark} NOMAD ENV VARS"
-#     mode: '0640'
-#     owner: "{{ ansible_env.SUDO_USER }}"
-#     path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
-#   name: Set Nomad environment variables in .bashrc
-#   register: bashrc_nomad_vars
-#   when: "'manager' in group_names"
+- ansible.builtin.blockinfile:
+    block: |
+      export NOMAD_TOKEN={{ nomad_bootstrap_token }}
+      export NOMAD_ADDR=https://localhost:4646
+      export NOMAD_CACERT={{ certificate_files.ca_certificate }}
+      export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
+      export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
+    group: "{{ ansible_env.SUDO_USER }}"
+    marker: "# {mark} NOMAD ENV VARS"
+    mode: '0640'
+    owner: "{{ ansible_env.SUDO_USER }}"
+    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
+  name: Set Nomad environment variables in .bashrc
+  register: bashrc_nomad_vars
+  when: "'manager' in group_names"
 
-# - ansible.builtin.file:
-#     group: nomad
-#     mode: '0750'
-#     owner: nomad
-#     path: /etc/nomad.d/policies
-#     state: directory
-#   name: Setup Nomad policies folder permissions
-#   when: "'manager' in group_names"
+- ansible.builtin.file:
+    group: nomad
+    mode: '0750'
+    owner: nomad
+    path: /etc/nomad.d/policies
+    state: directory
+  name: Setup Nomad policies folder permissions
+  when: "'manager' in group_names"
 
-# - ansible.builtin.copy:
-#     content: |
-#       node {
-#         policy = "write"
-#       }
-#     dest: /etc/nomad.d/policies/allow-node-write.hcl
-#     group: nomad
-#     mode: '0640'
-#     owner: nomad
-#   name: Write out the "allow-node-write" policy HCL
-#   register: allow_node_write_policy
-#   when: "'manager' in group_names"
+- ansible.builtin.copy:
+    content: |
+      node {
+        policy = "write"
+      }
+    dest: /etc/nomad.d/policies/allow-node-write.hcl
+    group: nomad
+    mode: '0640'
+    owner: nomad
+  name: Write out the "allow-node-write" policy HCL
+  register: allow_node_write_policy
+  when: "'manager' in group_names"
 
-# - ansible.builtin.command:
-#     cmd: >
-#       nomad acl policy apply -token {{ nomad_bootstrap_token }}
-#       -description "Allow node write access" allow-node-write
-#       /etc/nomad.d/policies/allow-node-write.hcl
-#   environment:
-#     NOMAD_ADDR: https://localhost:4646
-#     NOMAD_CACERT: /etc/nomad.d/certs/cluster.bijunu.lt-agent-ca.pem
-#     NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-#     NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
-#   name: Apply the "allow-node-write" ACL policy
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - allow_node_write_policy.changed
+- ansible.builtin.command:
+    cmd: >
+      nomad acl policy apply -token {{ nomad_bootstrap_token }}
+      -description "Allow node write access" allow-node-write
+      /etc/nomad.d/policies/allow-node-write.hcl
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  name: Apply the "allow-node-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_node_write_policy.changed
 
-# - ansible.builtin.copy:
-#     content: |
-#       agent {
-#         policy = "read"
-#       }
-#     dest: /etc/nomad.d/policies/allow-agent-read.hcl
-#     group: nomad
-#     mode: '0640'
-#     owner: nomad
-#   name: Write out the "allow-agent-read" policy HCL
-#   register: allow_agent_read_policy
-#   when: "'manager' in group_names"
+- ansible.builtin.copy:
+    content: |
+      agent {
+        policy = "read"
+      }
+    dest: /etc/nomad.d/policies/allow-agent-read.hcl
+    group: nomad
+    mode: '0640'
+    owner: nomad
+  name: Write out the "allow-agent-read" policy HCL
+  register: allow_agent_read_policy
+  when: "'manager' in group_names"
 
-# - ansible.builtin.command:
-#     cmd: >
-#       nomad acl policy apply -token {{ nomad_bootstrap_token }}
-#       -description "Allow agent read access" allow-agent-read
-#       /etc/nomad.d/policies/allow-agent-read.hcl
-#   environment:
-#     NOMAD_ADDR: https://localhost:4646
-#     NOMAD_CACERT: /etc/nomad.d/certs/cluster.bijunu.lt-agent-ca.pem
-#     NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-#     NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
-#   name: Apply the "allow-agent-read" ACL policy
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - allow_agent_read_policy.changed
+- ansible.builtin.command:
+    cmd: >
+      nomad acl policy apply -token {{ nomad_bootstrap_token }}
+      -description "Allow agent read access" allow-agent-read
+      /etc/nomad.d/policies/allow-agent-read.hcl
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  name: Apply the "allow-agent-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_agent_read_policy.changed
 
-# - community.general.nomad_token:
-#     client_cert: "{{ certificate_files.cli_certificate }}"
-#     client_key: "{{ certificate_files.cli_private_key }}"
-#     global_replicated: true
-#     host: localhost
-#     name: nomad-client
-#     policies:
-#       - allow-agent-read
-#       - allow-node-write
-#     state: present
-#     token: "{{ nomad_bootstrap_token }}"
-#   environment:
-#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-#   name: Create scoped "agent" token for clients
-#   register: agent_token
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - >
-#       nomad_client_token is not defined
-#       or allow_agent_read_policy.changed
-#       or allow_node_write_policy.changed
+- community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
+    global_replicated: true
+    host: localhost
+    name: nomad-client
+    policies:
+      - allow-agent-read
+      - allow-node-write
+    state: present
+    token: "{{ nomad_bootstrap_token }}"
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+  name: Create scoped "agent" token for clients
+  register: agent_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      nomad_client_token is not defined
+      or allow_agent_read_policy.changed
+      or allow_node_write_policy.changed
 
-# - ansible.builtin.set_fact:
-#     cacheable: true
-#     nomad_client_token: "{{ agent_token.result.secret_id }}"
-#   name: Cache the new client token indefinitely
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - agent_token.changed
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_client_token: "{{ agent_token.result.secret_id }}"
+  name: Cache the new client token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - agent_token.changed
 
-# - community.general.nomad_token:
-#     client_cert: "{{ certificate_files.cli_certificate }}"
-#     client_key: "{{ certificate_files.cli_private_key }}"
-#     global_replicated: true
-#     host: localhost
-#     name: nomad-server
-#     state: present
-#     token: "{{ nomad_bootstrap_token }}"
-#     token_type: management
-#   environment:
-#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-#   name: Create scoped "management" token for servers
-#   register: management_token
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - nomad_server_token is not defined
+- community.general.nomad_token:
+    client_cert: "{{ certificate_files.cli_certificate }}"
+    client_key: "{{ certificate_files.cli_private_key }}"
+    global_replicated: true
+    host: localhost
+    name: nomad-server
+    state: present
+    token: "{{ nomad_bootstrap_token }}"
+    token_type: management
+  environment:
+    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+  name: Create scoped "management" token for servers
+  register: management_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_server_token is not defined
 
-# - ansible.builtin.set_fact:
-#     cacheable: true
-#     nomad_server_token: "{{ management_token.result.secret_id }}"
-#   name: Cache the new server token indefinitely
-#   when:
-#     - inventory_hostname == groups['manager'][0]
-#     - management_token.changed
+- ansible.builtin.set_fact:
+    cacheable: true
+    nomad_server_token: "{{ management_token.result.secret_id }}"
+  name: Cache the new server token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - management_token.changed
 
-# - ansible.builtin.blockinfile:
-#     block: |
-#       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
-#     group: nomad
-#     marker: "# {mark} ACL TOKEN"
-#     mode: '0640'
-#     owner: nomad
-#     path: /etc/nomad.d/nomad.env
-#   name: Set Nomad ACL server token
-#   register: server_nomad_env_file
-#   when: "'manager' in group_names"
+- ansible.builtin.blockinfile:
+    block: |
+      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
+    group: nomad
+    marker: "# {mark} ACL TOKEN"
+    mode: '0640'
+    owner: nomad
+    path: /etc/nomad.d/nomad.env
+  name: Set Nomad ACL server token
+  register: server_nomad_env_file
+  when: "'manager' in group_names"
 
-# - ansible.builtin.blockinfile:
-#     block: |
-#       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
-#     group: root
-#     marker: "# {mark} ACL TOKEN"
-#     mode: '0640'
-#     owner: root
-#     path: /etc/nomad.d/nomad.env
-#   name: Set Nomad ACL client token
-#   register: client_nomad_env_file
-#   when: "'manager' not in group_names"
+- ansible.builtin.blockinfile:
+    block: |
+      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
+    group: root
+    marker: "# {mark} ACL TOKEN"
+    mode: '0640'
+    owner: root
+    path: /etc/nomad.d/nomad.env
+  name: Set Nomad ACL client token
+  register: client_nomad_env_file
+  when: "'manager' not in group_names"
 
-# - ansible.builtin.systemd_service:
-#     daemon_reload: true
-#     enabled: true
-#     name: nomad
-#     state: started
-#   name: Start all Nomad nodes
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    enabled: true
+    name: nomad
+    state: started
+  name: Start all Nomad nodes
 
-# - ansible.builtin.systemd_service:
-#     daemon_reload: true
-#     name: nomad
-#     state: restarted
-#   name: Restart Nomad if configuration or service has been changed
-#   when: >
-#     nomad_config.changed
-#     or nomad_service.changed
-#     or server_nomad_env_file.changed
-#     or client_nomad_env_file.changed
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: nomad
+    state: restarted
+  name: Restart Nomad if configuration or service has been changed
+  when: >
+    nomad_config.changed
+    or nomad_service.changed
+    or certificates_updated
+    or server_nomad_env_file.changed
+    or client_nomad_env_file.changed
 
-# - ansible.builtin.reboot:
-#   name: Reboot the server and wait for it to come back
-#   when: user_group.changed or bashrc_nomad_vars.changed
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: user_group.changed or bashrc_nomad_vars.changed
 ...
