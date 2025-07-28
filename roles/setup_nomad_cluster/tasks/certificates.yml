@@ -49,7 +49,6 @@
       paths:
         certificate: "{{ certificate_files.ca_certificate }}"
         private_key: "{{ certificate_files.ca_private_key }}"
-    when: inventory_hostname == first_manager
 
   - ansible.builtin.command:
       cmd: >
@@ -73,45 +72,19 @@
       - inventory_hostname == first_manager
       - certificate_removed
 
-  # - ansible.builtin.debug:
-  #     msg: |
-  #       {{ certificate_removed }}
-  #       {{ certificate_files.ca_certificate }}
-  #       {{ certificate_files.ca_private_key }}
-  #   when: inventory_hostname == first_manager
-
-  # - ansible.builtin.fail:
-
-  # - ansible.builtin.fetch:
-  #     dest: "{{ certificate_files.ca_certificate_local }}"
-  #     flat: true
-  #     src: "{{ certificate_files.ca_certificate }}"
-  #   name: Copy Nomad CA's certificate to cache
-  #   when: not ca_certificate_creation.skipped
-
-  # - ansible.builtin.fetch:
-  #     dest: "{{ certificate_files.ca_private_key_local }}"
-  #     flat: true
-  #     src: "{{ certificate_files.ca_private_key }}"
-  #   name: Copy Nomad CA's private key to cache
-  #   when: not ca_certificate_creation.skipped
-
-#     - ansible.builtin.copy:
-#         dest: "{{ certificate_files.ca_certificate }}"
-#         group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-#         mode: '0750'
-#         owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-#         src: "{{ certificate_files.ca_certificate_local }}"
-#       name: Copy Nomad CA's certificate from cache
-
-#     - ansible.builtin.copy:
-#         dest: "{{ certificate_files.ca_private_key }}"
-#         group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-#         mode: '0750'
-#         owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-#         src: "{{ certificate_files.ca_private_key_local }}"
-#       name: Copy Nomad CA's private key from cache
-#       when: "'manager' in group_names"
+  - include_tasks: sync_certificates.yml
+    name: Synchronize CA certificates
+    vars:
+      certificate:
+        destinations: true
+        path: "{{ certificate_files.ca_certificate }}"
+        path_local: "{{ certificate_files.ca_certificate_local }}"
+      private_key:
+        destinations: "{{ 'manager' in group_names }}"
+        path: "{{ certificate_files.ca_private_key }}"
+        path_local: "{{ certificate_files.ca_private_key_local }}"
+      source: "{{ inventory_hostname == first_manager }}"
+    when: hostvars[first_manager].ca_certificate_creation.changed
   name: CA certificate
 
 - block:
