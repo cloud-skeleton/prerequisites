@@ -166,14 +166,6 @@
   name: Add Nomad autocomplete configuration
   when: not nomad_completion_present
 
-- ansible.builtin.user:
-    append: true
-    groups: nomad
-    name: "{{ ansible_env.SUDO_USER }}"
-  name: Add current user to nomad group
-  register: user_group
-  when: "'manager' not in group_names"
-
 - ansible.builtin.file:
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     mode: '0750'
@@ -269,22 +261,6 @@
   when:
     - inventory_hostname == groups['manager'][0]
     - bootstrap_token.changed
-
-- ansible.builtin.blockinfile:
-    block: |
-      export NOMAD_TOKEN={{ nomad_bootstrap_token }}
-      export NOMAD_ADDR=https://localhost:4646
-      export NOMAD_CACERT={{ certificate_files.ca_certificate }}
-      export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
-      export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
-    group: "{{ ansible_env.SUDO_USER }}"
-    marker: "# {mark} NOMAD ENV VARS"
-    mode: '0640'
-    owner: "{{ ansible_env.SUDO_USER }}"
-    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
-  name: Set Nomad environment variables in .bashrc
-  register: bashrc_nomad_vars
-  when: "'manager' in group_names"
 
 - ansible.builtin.file:
     group: nomad
@@ -454,6 +430,30 @@
     or certificates_updated
     or server_nomad_env_file.changed
     or client_nomad_env_file.changed
+
+- ansible.builtin.user:
+    append: true
+    groups: nomad
+    name: "{{ ansible_env.SUDO_USER }}"
+  name: Add current user to nomad group
+  register: user_group
+  when: "'manager' in group_names"
+
+- ansible.builtin.blockinfile:
+    block: |
+      export NOMAD_TOKEN={{ nomad_server_token }}
+      export NOMAD_ADDR=https://localhost:4646
+      export NOMAD_CACERT={{ certificate_files.ca_certificate }}
+      export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
+      export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
+    group: "{{ ansible_env.SUDO_USER }}"
+    marker: "# {mark} NOMAD ENV VARS"
+    mode: '0640'
+    owner: "{{ ansible_env.SUDO_USER }}"
+    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
+  name: Set Nomad environment variables in .bashrc
+  register: bashrc_nomad_vars
+  when: "'manager' in group_names"
 
 - ansible.builtin.reboot:
   name: Reboot the server and wait for it to come back
