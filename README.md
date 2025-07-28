@@ -118,6 +118,9 @@ graph LR
 - Create a file named `.env` in `/tmp/cloud-skeleton-prerequisites` folder with the following content:
 
   ```bash
+  # Enable cluster management mTLS mode
+  ENABLE_CLUSTER_MANAGEMENT_MTLS=false
+
   # Ingress worker node hostnames (space-separated list)
   NODE_INGRESS_WORKERS="ingress-worker-1.cluster.${DOMAIN}"
 
@@ -156,6 +159,9 @@ graph LR
   ```
 
   #### Variable Descriptions
+
+  - **`ENABLE_CLUSTER_MANAGEMENT_MTLS`**  
+    Enable cluster management mTLS mode (all HTTP requests will require client certificate).
 
   - **`NODE_INGRESS_WORKERS`**  
     A space-separated list of ingress-worker hostnames that **[Ansible][ansible]** will target for your public entry point nodes.
