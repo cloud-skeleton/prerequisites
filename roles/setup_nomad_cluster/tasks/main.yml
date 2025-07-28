@@ -410,11 +410,11 @@
     block: |
       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
     group: nomad
-    marker: "# {mark} ACL TOKEN"
+    marker: "# {mark} NOMAD"
     mode: '0640'
     owner: nomad
     path: /etc/nomad.d/nomad.env
-  name: Set Nomad ACL server token
+  name: Set Nomad environment variables for server
   register: server_nomad_env_file
   when: "'manager' in group_names"
 
@@ -422,11 +422,11 @@
     block: |
       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
     group: root
-    marker: "# {mark} ACL TOKEN"
+    marker: "# {mark} NOMAD"
     mode: '0640'
     owner: root
     path: /etc/nomad.d/nomad.env
-  name: Set Nomad ACL client token
+  name: Set Nomad environment variables for client
   register: client_nomad_env_file
   when: "'manager' not in group_names"
 

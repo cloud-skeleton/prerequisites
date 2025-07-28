@@ -15,22 +15,22 @@
 
 - ansible.builtin.set_fact:
     certificate_files:
-      ca_certificate: "/etc/nomad.d/certs/{{ certificate_request.domain_name }}-agent-ca.pem"
-      ca_certificate_local: "{{ playbook_dir }}/../.cache/{{ certificate_request.domain_name }}-agent-ca.pem"
-      ca_private_key: "/etc/nomad.d/certs/{{ certificate_request.domain_name }}-agent-ca-key.pem"
-      ca_private_key_local: "{{ playbook_dir }}/../.cache/{{ certificate_request.domain_name }}-agent-ca-key.pem"
-      cli_certificate: "/etc/nomad.d/certs/global-cli-{{ certificate_request.domain_name }}.pem"
-      cli_certificate_local: "{{ playbook_dir }}/../.cache/global-cli-{{ certificate_request.domain_name }}.pem"
-      cli_private_key: "/etc/nomad.d/certs/global-cli-{{ certificate_request.domain_name }}-key.pem"
-      cli_private_key_local: "{{ playbook_dir }}/../.cache/global-cli-{{ certificate_request.domain_name }}-key.pem"
-      client_certificate: "/etc/nomad.d/certs/global-client-{{ certificate_request.domain_name }}.pem"
-      client_certificate_local: "{{ playbook_dir }}/../.cache/global-client-{{ certificate_request.domain_name }}.pem"
-      client_private_key: "/etc/nomad.d/certs/global-client-{{ certificate_request.domain_name }}-key.pem"
-      client_private_key_local: "{{ playbook_dir }}/../.cache/global-client-{{ certificate_request.domain_name }}-key.pem"
-      server_certificate: "/etc/nomad.d/certs/global-server-{{ certificate_request.domain_name }}.pem"
-      server_certificate_local: "{{ playbook_dir }}/../.cache/global-server-{{ certificate_request.domain_name }}.pem"
-      server_private_key: "/etc/nomad.d/certs/global-server-{{ certificate_request.domain_name }}-key.pem"
-      server_private_key_local: "{{ playbook_dir }}/../.cache/global-server-{{ certificate_request.domain_name }}-key.pem"
+      ca_certificate: "/etc/nomad.d/certs/nomad-agent-ca.pem"
+      ca_certificate_local: "{{ playbook_dir }}/../.cache/nomad-agent-ca.pem"
+      ca_private_key: "/etc/nomad.d/certs/nomad-agent-ca-key.pem"
+      ca_private_key_local: "{{ playbook_dir }}/../.cache/nomad-agent-ca-key.pem"
+      cli_certificate: "/etc/nomad.d/certs/global-cli-nomad.pem"
+      cli_certificate_local: "{{ playbook_dir }}/../.cache/global-cli-nomad.pem"
+      cli_private_key: "/etc/nomad.d/certs/global-cli-nomad-key.pem"
+      cli_private_key_local: "{{ playbook_dir }}/../.cache/global-cli-nomad-key.pem"
+      client_certificate: "/etc/nomad.d/certs/global-client-nomad.pem"
+      client_certificate_local: "{{ playbook_dir }}/../.cache/global-client-nomad.pem"
+      client_private_key: "/etc/nomad.d/certs/global-client-nomad-key.pem"
+      client_private_key_local: "{{ playbook_dir }}/../.cache/global-client-nomad-key.pem"
+      server_certificate: "/etc/nomad.d/certs/global-server-nomad.pem"
+      server_certificate_local: "{{ playbook_dir }}/../.cache/global-server-nomad.pem"
+      server_private_key: "/etc/nomad.d/certs/global-server-nomad-key.pem"
+      server_private_key_local: "{{ playbook_dir }}/../.cache/global-server-nomad-key.pem"
   name: Set certificate file paths
 
 - ansible.builtin.file:
@@ -56,9 +56,7 @@
           -common-name "{{ certificate_request.common_name }}"
           -country "{{ certificate_request.country }}"
           -days {{ certificate_request.days }}
-          -domain {{ certificate_request.domain_name }}
           -locality "{{ certificate_request.locality }}"
-          -name-constraint
           -organization "{{ certificate_request.organization }}"
           -organizational-unit "{{ certificate_request.organizational_unit }}"
           -postal-code "{{ certificate_request.postal_code }}"
@@ -101,8 +99,6 @@
       cmd: >
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
-          {{ '-additional-ipaddress ' ~ (all_manager_ips | join(' -additional-ipaddress ')) }}
-          -domain {{ certificate_request.domain_name }}
           -region global
           -server
     args:
@@ -142,9 +138,7 @@
       cmd: >
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
-          {{ '-additional-ipaddress ' ~ (all_worker_ips | join(' -additional-ipaddress ')) }}
           -client
-          -domain {{ certificate_request.domain_name }}
     args:
       chdir: /etc/nomad.d/certs
     name: Generate Nomad client private key and certificate
@@ -182,9 +176,7 @@
       cmd: >
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
-          {{ '-additional-ipaddress ' ~ (all_manager_ips | join(' -additional-ipaddress ')) }}
           -cli
-          -domain {{ certificate_request.domain_name }}
     args:
       chdir: /etc/nomad.d/certs
     name: Generate Nomad CLI private key and certificate
