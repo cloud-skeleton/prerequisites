@@ -100,6 +100,7 @@
   - ansible.builtin.command:
       cmd: >
         nomad tls cert create
+          -additional-dnsname="*.{{ certificate_request.domain_name }}"
           {{ '-additional-ipaddress ' ~ (all_manager_ips | join(' -additional-ipaddress ')) }}
           -domain {{ certificate_request.domain_name }}
           -region global
@@ -140,6 +141,7 @@
   - ansible.builtin.command:
       cmd: >
         nomad tls cert create
+          -additional-dnsname="*.{{ certificate_request.domain_name }}"
           {{ '-additional-ipaddress ' ~ (all_worker_ips | join(' -additional-ipaddress ')) }}
           -client
           -domain {{ certificate_request.domain_name }}
@@ -179,7 +181,8 @@
   - ansible.builtin.command:
       cmd: >
         nomad tls cert create
-          {{ '-additional-ipaddress ' ~ (all_worker_ips | join(' -additional-ipaddress ')) }}
+          -additional-dnsname="*.{{ certificate_request.domain_name }}"
+          {{ '-additional-ipaddress ' ~ (all_manager_ips | join(' -additional-ipaddress ')) }}
           -cli
           -domain {{ certificate_request.domain_name }}
     args:
