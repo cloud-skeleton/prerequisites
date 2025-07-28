@@ -1,4 +1,38 @@
 ---
+- ansible.builtin.set_fact:
+    certificate_request:
+      common_name: "{{ certificate.common_name | default('Cloud Skeleton CA', true) }}"
+      country: "{{ certificate.country | default('EU', true) }}"
+      days: "{{ certificate.days | default(365, true) }}"
+      domain_name: "{{ certificate.domain_name | default(first_manager.split('.')[1:] | join('.'), true) }}"
+      locality: "{{ certificate.locality | default('Brussels', true) }}"
+      organization: "{{ certificate.organization | default('Cloud Skeleton', true) }}"
+      organizational_unit: "{{ certificate.organizational_unit | default('Nomad Cluster', true) }}"
+      postal_code: "{{ certificate.postal_code | default(1049, true) }}"
+      province: "{{ certificate.province | default('Brussels', true) }}"
+      street_address: "{{ certificate.street_address | default('Rue de la Loi 200', true) }}"
+  name: Set certificate request information
+
+- ansible.builtin.set_fact:
+    certificate_files:
+      ca_certificate: "/etc/nomad.d/certs/{{ certificate_request.domain_name }}-agent-ca.pem"
+      ca_certificate_local: "{{ playbook_dir }}/../.cache/{{ certificate_request.domain_name }}-agent-ca.pem"
+      ca_private_key: "/etc/nomad.d/certs/{{ certificate_request.domain_name }}-agent-ca-key.pem"
+      ca_private_key_local: "{{ playbook_dir }}/../.cache/{{ certificate_request.domain_name }}-agent-ca-key.pem"
+      cli_certificate: "/etc/nomad.d/certs/global-cli-{{ certificate_request.domain_name }}.pem"
+      cli_certificate_local: "{{ playbook_dir }}/../.cache/global-cli-{{ certificate_request.domain_name }}.pem"
+      cli_private_key: "/etc/nomad.d/certs/global-cli-{{ certificate_request.domain_name }}-key.pem"
+      cli_private_key_local: "{{ playbook_dir }}/../.cache/global-cli-{{ certificate_request.domain_name }}-key.pem"
+      client_certificate: "/etc/nomad.d/certs/global-client-{{ certificate_request.domain_name }}.pem"
+      client_certificate_local: "{{ playbook_dir }}/../.cache/global-client-{{ certificate_request.domain_name }}.pem"
+      client_private_key: "/etc/nomad.d/certs/global-client-{{ certificate_request.domain_name }}-key.pem"
+      client_private_key_local: "{{ playbook_dir }}/../.cache/global-client-{{ certificate_request.domain_name }}-key.pem"
+      server_certificate: "/etc/nomad.d/certs/global-server-{{ certificate_request.domain_name }}.pem"
+      server_certificate_local: "{{ playbook_dir }}/../.cache/global-server-{{ certificate_request.domain_name }}.pem"
+      server_private_key: "/etc/nomad.d/certs/global-server-{{ certificate_request.domain_name }}-key.pem"
+      server_private_key_local: "{{ playbook_dir }}/../.cache/global-server-{{ certificate_request.domain_name }}-key.pem"
+  name: Set certificate file paths
+
 - ansible.builtin.file:
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     mode: '0750'
@@ -17,43 +51,50 @@
         private_key: "{{ certificate_files.ca_private_key }}"
     when: inventory_hostname == first_manager
 
-#     - ansible.builtin.command:
-#         cmd: >
-#           nomad tls ca create
-#             -common-name "{{ certificate.common_name }}"
-#             -country "{{ certificate.country }}"
-#             -days {{ certificate.days }}
-#             -domain {{ certificate.domain_name }}
-#             -locality "{{ certificate.locality }}"
-#             -name-constraint
-#             -organization "{{ certificate.organization }}"
-#             -organizational-unit "{{ certificate.organizational_unit }}"
-#             -postal-code "{{ certificate.postal_code }}"
-#             -province "{{ certificate.province }}"
-#             -street-address "{{ certificate.street_address }}"
-#       args:
-#         chdir: /etc/nomad.d/certs
-#       delegate_to: "{{ first_manager }}"
-#       name: Generate Nomad CA's private key and certificate
-#       register: ca_certificate_gen
-#       when: >
-#         not ca_certificate.stat.exists
-#         or not ca_private_key.stat.exists
-#         or not ca_certificate_data.valid_at.month
+  - ansible.builtin.command:
+      cmd: >
+        nomad tls ca create
+          -common-name "{{ certificate_request.common_name }}"
+          -country "{{ certificate_request.country }}"
+          -days {{ certificate_request.days }}
+          -domain {{ certificate_request.domain_name }}
+          -locality "{{ certificate_request.locality }}"
+          -name-constraint
+          -organization "{{ certificate_request.organization }}"
+          -organizational-unit "{{ certificate_request.organizational_unit }}"
+          -postal-code "{{ certificate_request.postal_code }}"
+          -province "{{ certificate_request.province }}"
+          -street-address "{{ certificate_request.street_address }}"
+    args:
+      chdir: /etc/nomad.d/certs
+    name: Generate Nomad CA's private key and certificate
+    register: ca_certificate_creation
+    when:
+      - inventory_hostname == first_manager
+      - certificate_removed
 
-#     - ansible.builtin.fetch:
-#         dest: "{{ certificate_files.ca_certificate_local }}"
-#         flat: true
-#         src: "{{ certificate_files.ca_certificate }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Copy Nomad CA's certificate to cache
+  # - ansible.builtin.debug:
+  #     msg: |
+  #       {{ certificate_removed }}
+  #       {{ certificate_files.ca_certificate }}
+  #       {{ certificate_files.ca_private_key }}
+  #   when: inventory_hostname == first_manager
 
-#     - ansible.builtin.fetch:
-#         dest: "{{ certificate_files.ca_private_key_local }}"
-#         flat: true
-#         src: "{{ certificate_files.ca_private_key }}"
-#       delegate_to: "{{ first_manager }}"
-#       name: Copy Nomad CA's private key to cache
+  # - ansible.builtin.fail:
+
+  # - ansible.builtin.fetch:
+  #     dest: "{{ certificate_files.ca_certificate_local }}"
+  #     flat: true
+  #     src: "{{ certificate_files.ca_certificate }}"
+  #   name: Copy Nomad CA's certificate to cache
+  #   when: not ca_certificate_creation.skipped
+
+  # - ansible.builtin.fetch:
+  #     dest: "{{ certificate_files.ca_private_key_local }}"
+  #     flat: true
+  #     src: "{{ certificate_files.ca_private_key }}"
+  #   name: Copy Nomad CA's private key to cache
+  #   when: not ca_certificate_creation.skipped
 
 #     - ansible.builtin.copy:
 #         dest: "{{ certificate_files.ca_certificate }}"
@@ -87,7 +128,7 @@
 #         cmd: >
 #           nomad tls cert create
 #             {{ '-additional-ipaddress ' ~ (manager_ips | join(' -additional-ipaddress ')) }}
-#             -domain {{ certificate.domain_name }}
+#             -domain {{ certificate_request.domain_name }}
 #             -region global
 #             -server
 #       args:
@@ -148,7 +189,7 @@
 #           nomad tls cert create
 #             {{ '-additional-ipaddress ' ~ (worker_ips | join(' -additional-ipaddress ')) }}
 #             -client
-#             -domain {{ certificate.domain_name }}
+#             -domain {{ certificate_request.domain_name }}
 #       args:
 #         chdir: /etc/nomad.d/certs
 #       delegate_to: "{{ first_manager }}"
@@ -205,7 +246,7 @@
 #           nomad tls cert create
 #             {{ '-additional-ipaddress ' ~ (manager_ips | join(' -additional-ipaddress ')) }}
 #             -cli
-#             -domain {{ certificate.domain_name }}
+#             -domain {{ certificate_request.domain_name }}
 #       args:
 #         chdir: /etc/nomad.d/certs
 #       delegate_to: "{{ first_manager }}"

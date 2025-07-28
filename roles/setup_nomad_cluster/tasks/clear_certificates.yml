@@ -15,19 +15,25 @@
       - not force_remove
       - certificate_file.stat.exists
 
+  - ansible.builtin.set_fact:
+      certificate_removed: >
+        {{
+          force_remove
+          or not certificate_file.stat.exists
+          or not certificate_data.valid_at.month
+        }}
+    name: Set fact if certificate files should be removed?
+
   - ansible.builtin.file:
       path: "{{ paths.certificate }}"
       state: absent
     name: Remove certificate if expires soon or forced removal
-    when: >
-      certificate_data.skipped
-      or not certificate_data.valid_at.month
+    register: certificate_file
+    when: certificate_removed
 
   - ansible.builtin.file:
       path: "{{ paths.private_key }}"
       state: absent
     name: Remove private key if certificate expires soon or forced removal
-    when: >
-      certificate_data.skipped
-      or not certificate_data.valid_at.month
+    when: certificate_removed
 ...
