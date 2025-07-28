@@ -25,21 +25,6 @@
 
 
 
-# - ansible.builtin.debug:
-#     var: all_manager_ips
-
-# - ansible.builtin.debug:
-#     var: all_manager_ips_fact
-
-# - ansible.builtin.debug:
-#     var: all_worker_ips
-
-# - ansible.builtin.debug:
-#     var: all_worker_ips_fact
-
-# - ansible.builtin.fail:
-#     msg: stop
-
 
 
 
