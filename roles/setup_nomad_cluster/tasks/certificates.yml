@@ -202,9 +202,11 @@
 
 - ansible.builtin.set_fact:
     certificates_updated: >
-      hostvars[first_manager].ca_certificate_creation.changed
-      or hostvars[first_manager].server_certificate_creation.changed
-      or hostvars[first_manager].client_certificate_creation.changed
-      or hostvars[first_manager].cli_certificate_creation.changed
+      {{
+        hostvars[first_manager].ca_certificate_creation.changed
+        or hostvars[first_manager].server_certificate_creation.changed
+        or hostvars[first_manager].client_certificate_creation.changed
+        or hostvars[first_manager].cli_certificate_creation.changed
+      }}
   name: Set certificates update fact
 ...
