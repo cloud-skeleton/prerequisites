@@ -49,6 +49,7 @@ client {
 {% endif %}
 
 // @TODO: Once consul is installed check this stanza
+// https://developer.hashicorp.com/nomad/docs/configuration/consul
 // consul {
 // }
 
@@ -67,6 +68,7 @@ server {
   enabled = true
   encrypt = "{{ nomad_encryption_string }}"
   // @TODO: investigate later
+  // https://developer.hashicorp.com/nomad/docs/configuration/server#oidc_issuer
   // oidc_issuer = ""
 
   plan_rejection_tracker {
@@ -93,3 +95,8 @@ tls {
   verify_https_client = {{ enable_cluster_management_mtls }}
   verify_server_hostname = true
 }
+
+// @TODO: Once consul is installed check this stanza
+// https://developer.hashicorp.com/nomad/docs/configuration/vault
+// vault {
+// }
