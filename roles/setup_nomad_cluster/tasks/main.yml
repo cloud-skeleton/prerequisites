@@ -1,119 +1,119 @@
 ---
-- ansible.builtin.set_fact:
-    first_manager: "{{ groups['manager'][0] }}"
-  name: Set first manager instance
+# - ansible.builtin.set_fact:
+#     first_manager: "{{ groups['manager'][0] }}"
+#   name: Set first manager instance
 
-- ansible.builtin.set_fact:
-    all_manager_ips: >-
-      {{
-        groups['manager']
-        | map('extract', hostvars, 'ansible_default_ipv4')
-        | map(attribute='address') | flatten
-      }}
-  name: Set all managers IP list
-  register: all_manager_ips_fact
+# - ansible.builtin.set_fact:
+#     all_manager_ips: >-
+#       {{
+#         groups['manager']
+#         | map('extract', hostvars, 'ansible_default_ipv4')
+#         | map(attribute='address') | flatten
+#       }}
+#   name: Set all managers IP list
+#   register: all_manager_ips_fact
 
-- ansible.builtin.set_fact:
-    all_worker_ips: >-
-      {{
-        (groups['main_worker'] + groups['ingress_worker'])
-        | map('extract', hostvars, 'ansible_default_ipv4')
-        | map(attribute='address') | flatten
-      }}
-  name: Set all workers IP list
-  register: all_worker_ips_fact
+# - ansible.builtin.set_fact:
+#     all_worker_ips: >-
+#       {{
+#         (groups['main_worker'] + groups['ingress_worker'])
+#         | map('extract', hostvars, 'ansible_default_ipv4')
+#         | map(attribute='address') | flatten
+#       }}
+#   name: Set all workers IP list
+#   register: all_worker_ips_fact
 
-- ansible.builtin.set_fact:
-    worker_ips: >-
-      {{
-        ansible_play_hosts
-        | reject('in', groups['manager'])
-        | map('extract', hostvars, 'ansible_default_ipv4')
-        | map(attribute='address')
-        | reject('equalto', ansible_default_ipv4.address)
-        | list
-      }}
-  name: Collect other worker IPs
+# - ansible.builtin.set_fact:
+#     worker_ips: >-
+#       {{
+#         ansible_play_hosts
+#         | reject('in', groups['manager'])
+#         | map('extract', hostvars, 'ansible_default_ipv4')
+#         | map(attribute='address')
+#         | reject('equalto', ansible_default_ipv4.address)
+#         | list
+#       }}
+#   name: Collect other worker IPs
 
-- community.general.ufw:
-    from_ip: "{{ ip }}"
-    log: true
-    proto: "{{ proto }}"
-    rule: allow
-    to_port: "{{ port_no }}"
-  loop: "{{ query('nested', worker_ips, nomad_client_to_server_ports | map('split', '/') | list) }}"
-  loop_control:
-    loop_var: rule
-  name: Allow Nomad client to server ports
-  vars:
-    ip: "{{ rule[0] }}"
-    port_no: "{{ rule[1] }}"
-    proto: "{{ rule[2] }}"
-  when: "'manager' in group_names"
+# - community.general.ufw:
+#     from_ip: "{{ ip }}"
+#     log: true
+#     proto: "{{ proto }}"
+#     rule: allow
+#     to_port: "{{ port_no }}"
+#   loop: "{{ query('nested', worker_ips, nomad_client_to_server_ports | map('split', '/') | list) }}"
+#   loop_control:
+#     loop_var: rule
+#   name: Allow Nomad client to server ports
+#   vars:
+#     ip: "{{ rule[0] }}"
+#     port_no: "{{ rule[1] }}"
+#     proto: "{{ rule[2] }}"
+#   when: "'manager' in group_names"
 
-- ansible.builtin.set_fact:
-    manager_ips: >-
-      {{
-        groups['manager']
-        | map('extract', hostvars, 'ansible_default_ipv4')
-        | map(attribute='address')
-        | reject('equalto', ansible_default_ipv4.address)
-        | list
-      }}
-  name: Collect other manager IPs
+# - ansible.builtin.set_fact:
+#     manager_ips: >-
+#       {{
+#         groups['manager']
+#         | map('extract', hostvars, 'ansible_default_ipv4')
+#         | map(attribute='address')
+#         | reject('equalto', ansible_default_ipv4.address)
+#         | list
+#       }}
+#   name: Collect other manager IPs
 
-- community.general.ufw:
-    from_ip: "{{ ip }}"
-    log: true
-    proto: "{{ proto }}"
-    rule: allow
-    to_port: "{{ port_no }}"
-  loop: "{{ query('nested', manager_ips, nomad_server_to_server_ports | map('split', '/') | list) }}"
-  loop_control:
-    loop_var: rule
-  name: Allow Nomad server to server ports
-  vars:
-    ip: "{{ rule[0] }}"
-    port_no: "{{ rule[1] }}"
-    proto: "{{ rule[2] }}"
-  when: "'manager' in group_names"
+# - community.general.ufw:
+#     from_ip: "{{ ip }}"
+#     log: true
+#     proto: "{{ proto }}"
+#     rule: allow
+#     to_port: "{{ port_no }}"
+#   loop: "{{ query('nested', manager_ips, nomad_server_to_server_ports | map('split', '/') | list) }}"
+#   loop_control:
+#     loop_var: rule
+#   name: Allow Nomad server to server ports
+#   vars:
+#     ip: "{{ rule[0] }}"
+#     port_no: "{{ rule[1] }}"
+#     proto: "{{ rule[2] }}"
+#   when: "'manager' in group_names"
 
-- community.general.ufw:
-    from_ip: "{{ ip }}"
-    log: true
-    proto: "{{ proto }}"
-    rule: allow
-    to_port: "{{ port_no }}"
-  loop: "{{ query('nested', nomad_server_http_allow_ip_cidrs, nomad_server_admin_ports | map('split', '/') | list) }}"
-  loop_control:
-    loop_var: rule
-  name: Allow admin access to Nomad server HTTP endpoints
-  vars:
-    ip: "{{ rule[0] }}"
-    port_no: "{{ rule[1] }}"
-    proto: "{{ rule[2] }}"
-  when: "'manager' in group_names"
+# - community.general.ufw:
+#     from_ip: "{{ ip }}"
+#     log: true
+#     proto: "{{ proto }}"
+#     rule: allow
+#     to_port: "{{ port_no }}"
+#   loop: "{{ query('nested', nomad_server_http_allow_ip_cidrs, nomad_server_admin_ports | map('split', '/') | list) }}"
+#   loop_control:
+#     loop_var: rule
+#   name: Allow admin access to Nomad server HTTP endpoints
+#   vars:
+#     ip: "{{ rule[0] }}"
+#     port_no: "{{ rule[1] }}"
+#     proto: "{{ rule[2] }}"
+#   when: "'manager' in group_names"
 
-- community.general.ufw:
-    from_ip: 0.0.0.0/0
-    log: true
-    proto: "{{ proto }}"
-    rule: allow
-    to_port: "{{ port_no }}"
-  loop: "{{ ingress_worker_ports | map('split', '/') }}"
-  loop_control:
-    loop_var: rule
-  name: Allow ingress worker ports
-  vars:
-    port_no: "{{ rule[0] }}"
-    proto: "{{ rule[1] }}"
-  when: "'ingress_worker' in group_names"
+# - community.general.ufw:
+#     from_ip: 0.0.0.0/0
+#     log: true
+#     proto: "{{ proto }}"
+#     rule: allow
+#     to_port: "{{ port_no }}"
+#   loop: "{{ ingress_worker_ports | map('split', '/') }}"
+#   loop_control:
+#     loop_var: rule
+#   name: Allow ingress worker ports
+#   vars:
+#     port_no: "{{ rule[0] }}"
+#     proto: "{{ rule[1] }}"
+#   when: "'ingress_worker' in group_names"
 
-- ansible.builtin.get_url:
-    dest: /etc/apt/keyrings/hashicorp.asc
-    force: true
-    url: https://apt.releases.hashicorp.com/gpg
-  name: Add Hashicorp GPG apt key to the store
+# - ansible.builtin.get_url:
+#     dest: /etc/apt/keyrings/hashicorp.asc
+#     force: true
+#     url: https://apt.releases.hashicorp.com/gpg
+#   name: Add Hashicorp GPG apt key to the store
 
 - ansible.builtin.command:
     cmd: dpkg --print-architecture
@@ -121,341 +121,347 @@
   name: Gather Debian package architecture
   register: dpkg_arch
 
-- ansible.builtin.apt_repository:
-    repo: >-
-      deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/hashicorp.asc]
-      https://apt.releases.hashicorp.com {{ ansible_facts.lsb.codename }} main
-  name: Configure Hashicorp APT repository
+# - ansible.builtin.apt_repository:
+#     repo: >-
+#       deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/hashicorp.asc]
+#       https://apt.releases.hashicorp.com {{ ansible_facts.lsb.codename }} main
+#   name: Configure Hashicorp APT repository
 
-- ansible.builtin.apt:
-    autoclean: true
-    autoremove: true
-    clean: true
-    install_recommends: true
-    name: 
-      - nomad
-      - python3-pip
-      - python3-cryptography
-    state: latest
-    update_cache: true
-  name: Install Nomad dependencies packages
+# - ansible.builtin.apt:
+#     autoclean: true
+#     autoremove: true
+#     clean: true
+#     install_recommends: true
+#     name: 
+#       - nomad
+#       - python3-pip
+#       - python3-cryptography
+#     state: latest
+#     update_cache: true
+#   name: Install Nomad dependencies packages
 
-- ansible.builtin.pip:
-    break_system_packages: true
-    executable: pip3
-    name: python-nomad
-  name: Install Nomad Python dependencies packages
+# - ansible.builtin.pip:
+#     break_system_packages: true
+#     executable: pip3
+#     name:
+#       - python-nomad
+#       - github3.py
+#   name: Install Nomad Python dependencies packages
 
-- ansible.builtin.slurp:
-    src: /home/ansible/.bashrc
-  name: Read remote .bashrc into a variable
-  register: bashrc_file
+# - ansible.builtin.slurp:
+#     src: /home/ansible/.bashrc
+#   name: Read remote .bashrc into a variable
+#   register: bashrc_file
 
-- ansible.builtin.set_fact:
-    nomad_completion_present: >
-      {{ 
-        ('complete -C /usr/bin/nomad nomad')
-        in (bashrc_file.content | b64decode)
-      }}
-  name: Check for existing Nomad autocomplete line in .bashrc
+# - ansible.builtin.set_fact:
+#     nomad_completion_present: >
+#       {{ 
+#         ('complete -C /usr/bin/nomad nomad')
+#         in (bashrc_file.content | b64decode)
+#       }}
+#   name: Check for existing Nomad autocomplete line in .bashrc
 
-- ansible.builtin.command:
-    cmd: nomad -autocomplete-install
-  become: false
-  changed_when: false
-  name: Add Nomad autocomplete configuration
-  when: not nomad_completion_present
+# - ansible.builtin.command:
+#     cmd: nomad -autocomplete-install
+#   become: false
+#   changed_when: false
+#   name: Add Nomad autocomplete configuration
+#   when: not nomad_completion_present
 
-- ansible.builtin.file:
-    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-    mode: '0750'
-    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-    path: /etc/nomad.d
-    state: directory
-  name: Setup Nomad config folder permissions
+# - ansible.builtin.file:
+#     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+#     mode: '0750'
+#     owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+#     path: /etc/nomad.d
+#     state: directory
+#   name: Setup Nomad config folder permissions
 
-- ansible.builtin.command:
-    cmd: nomad operator gossip keyring generate
-  name: Generate 32 byte random string for encryption
-  register: encryption_string
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - nomad_encryption_string is not defined
+# - ansible.builtin.command:
+#     cmd: nomad operator gossip keyring generate
+#   name: Generate 32 byte random string for encryption
+#   register: encryption_string
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - nomad_encryption_string is not defined
 
-- ansible.builtin.set_fact:
-    cacheable: true
-    nomad_encryption_string: "{{ encryption_string.stdout }}"
-  name: Cache the new 32 byte encryption string indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - encryption_string.changed
+# - ansible.builtin.set_fact:
+#     cacheable: true
+#     nomad_encryption_string: "{{ encryption_string.stdout }}"
+#   name: Cache the new 32 byte encryption string indefinitely
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - encryption_string.changed
 
-- import_tasks: certificates.yml
+# - import_tasks: certificates.yml
 
-- ansible.builtin.template:
-    dest: /etc/nomad.d/nomad.hcl
-    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-    lstrip_blocks: true
-    mode: '0640'
-    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-    src: nomad.hcl.j2
-    trim_blocks: true
-  name: Configure Nomad
-  register: nomad_config
+# - ansible.builtin.template:
+#     dest: /etc/nomad.d/nomad.hcl
+#     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+#     lstrip_blocks: true
+#     mode: '0640'
+#     owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+#     src: nomad.hcl.j2
+#     trim_blocks: true
+#   name: Configure Nomad
+#   register: nomad_config
 
-- ansible.builtin.command:
-    cmd: nomad config validate /etc/nomad.d
-  name: Validate Nomad configuration
-  when: nomad_config.changed
+# - ansible.builtin.command:
+#     cmd: nomad config validate /etc/nomad.d
+#   name: Validate Nomad configuration
+#   when: nomad_config.changed
 
-- ansible.builtin.template:
-    dest: /lib/systemd/system/nomad.service
-    group: root
-    lstrip_blocks: true
-    mode: '0644'
-    owner: root
-    src: nomad.service.j2
-    trim_blocks: true
-  name: Configure Nomad service
-  register: nomad_service
+# - ansible.builtin.template:
+#     dest: /lib/systemd/system/nomad.service
+#     group: root
+#     lstrip_blocks: true
+#     mode: '0644'
+#     owner: root
+#     src: nomad.service.j2
+#     trim_blocks: true
+#   name: Configure Nomad service
+#   register: nomad_service
 
-- ansible.builtin.systemd_service:
-    daemon_reload: true
-    enabled: true
-    name: nomad
-    state: started
-  name: Start first Nomad manager
-  when: inventory_hostname == groups['manager'][0]
+# - ansible.builtin.systemd_service:
+#     daemon_reload: true
+#     enabled: true
+#     name: nomad
+#     state: started
+#   name: Start first Nomad manager
+#   when: inventory_hostname == groups['manager'][0]
 
-- ansible.builtin.systemd_service:
-    daemon_reload: true
-    name: nomad
-    state: restarted
-  name: Restart Nomad if configuration or service has been changed
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - >
-      nomad_config.changed
-      or nomad_service.changed
-      or certificates_updated
+# - ansible.builtin.systemd_service:
+#     daemon_reload: true
+#     name: nomad
+#     state: restarted
+#   name: Restart Nomad if configuration or service has been changed
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - >
+#       nomad_config.changed
+#       or nomad_service.changed
+#       or certificates_updated
 
-- community.general.nomad_token:
-    client_cert: "{{ certificate_files.cli_certificate }}"
-    client_key: "{{ certificate_files.cli_private_key }}"
-    global_replicated: true
-    host: localhost
-    state: present
-    token_type: bootstrap
-  environment:
-    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-  name: Create Nomad ACL boostrap token
-  register: bootstrap_token
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - nomad_bootstrap_token is not defined
+# - community.general.nomad_token:
+#     client_cert: "{{ certificate_files.cli_certificate }}"
+#     client_key: "{{ certificate_files.cli_private_key }}"
+#     global_replicated: true
+#     host: localhost
+#     state: present
+#     token_type: bootstrap
+#   environment:
+#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+#   name: Create Nomad ACL boostrap token
+#   register: bootstrap_token
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - nomad_bootstrap_token is not defined
 
-- ansible.builtin.set_fact:
-    cacheable: true
-    nomad_bootstrap_token: "{{ bootstrap_token.result.secret_id }}"
-  name: Cache the new bootstrap token indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - bootstrap_token.changed
+# - ansible.builtin.set_fact:
+#     cacheable: true
+#     nomad_bootstrap_token: "{{ bootstrap_token.result.secret_id }}"
+#   name: Cache the new bootstrap token indefinitely
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - bootstrap_token.changed
 
-- ansible.builtin.file:
-    group: nomad
-    mode: '0750'
-    owner: nomad
-    path: /etc/nomad.d/policies
-    state: directory
-  name: Setup Nomad policies folder permissions
-  when: "'manager' in group_names"
+# - ansible.builtin.file:
+#     group: nomad
+#     mode: '0750'
+#     owner: nomad
+#     path: /etc/nomad.d/policies
+#     state: directory
+#   name: Setup Nomad policies folder permissions
+#   when: "'manager' in group_names"
 
-- ansible.builtin.copy:
-    content: |
-      node {
-        policy = "write"
-      }
-    dest: /etc/nomad.d/policies/allow-node-write.hcl
-    group: nomad
-    mode: '0640'
-    owner: nomad
-  name: Write out the "allow-node-write" policy HCL
-  register: allow_node_write_policy
-  when: "'manager' in group_names"
+# - ansible.builtin.copy:
+#     content: |
+#       node {
+#         policy = "write"
+#       }
+#     dest: /etc/nomad.d/policies/allow-node-write.hcl
+#     group: nomad
+#     mode: '0640'
+#     owner: nomad
+#   name: Write out the "allow-node-write" policy HCL
+#   register: allow_node_write_policy
+#   when: "'manager' in group_names"
 
-- ansible.builtin.command:
-    cmd: >
-      nomad acl policy apply -token {{ nomad_bootstrap_token }}
-      -description "Allow node write access" allow-node-write
-      /etc/nomad.d/policies/allow-node-write.hcl
-  environment:
-    NOMAD_ADDR: https://localhost:4646
-    NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
-    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
-  name: Apply the "allow-node-write" ACL policy
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - allow_node_write_policy.changed
+# - ansible.builtin.command:
+#     cmd: >
+#       nomad acl policy apply -token {{ nomad_bootstrap_token }}
+#       -description "Allow node write access" allow-node-write
+#       /etc/nomad.d/policies/allow-node-write.hcl
+#   environment:
+#     NOMAD_ADDR: https://localhost:4646
+#     NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+#     NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+#     NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+#   name: Apply the "allow-node-write" ACL policy
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - allow_node_write_policy.changed
 
-- ansible.builtin.copy:
-    content: |
-      agent {
-        policy = "read"
-      }
-    dest: /etc/nomad.d/policies/allow-agent-read.hcl
-    group: nomad
-    mode: '0640'
-    owner: nomad
-  name: Write out the "allow-agent-read" policy HCL
-  register: allow_agent_read_policy
-  when: "'manager' in group_names"
+# - ansible.builtin.copy:
+#     content: |
+#       agent {
+#         policy = "read"
+#       }
+#     dest: /etc/nomad.d/policies/allow-agent-read.hcl
+#     group: nomad
+#     mode: '0640'
+#     owner: nomad
+#   name: Write out the "allow-agent-read" policy HCL
+#   register: allow_agent_read_policy
+#   when: "'manager' in group_names"
 
-- ansible.builtin.command:
-    cmd: >
-      nomad acl policy apply -token {{ nomad_bootstrap_token }}
-      -description "Allow agent read access" allow-agent-read
-      /etc/nomad.d/policies/allow-agent-read.hcl
-  environment:
-    NOMAD_ADDR: https://localhost:4646
-    NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
-    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
-  name: Apply the "allow-agent-read" ACL policy
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - allow_agent_read_policy.changed
+# - ansible.builtin.command:
+#     cmd: >
+#       nomad acl policy apply -token {{ nomad_bootstrap_token }}
+#       -description "Allow agent read access" allow-agent-read
+#       /etc/nomad.d/policies/allow-agent-read.hcl
+#   environment:
+#     NOMAD_ADDR: https://localhost:4646
+#     NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+#     NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+#     NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+#   name: Apply the "allow-agent-read" ACL policy
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - allow_agent_read_policy.changed
 
-- community.general.nomad_token:
-    client_cert: "{{ certificate_files.cli_certificate }}"
-    client_key: "{{ certificate_files.cli_private_key }}"
-    global_replicated: true
-    host: localhost
-    name: nomad-client
-    policies:
-      - allow-agent-read
-      - allow-node-write
-    state: present
-    token: "{{ nomad_bootstrap_token }}"
-  environment:
-    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-  name: Create scoped "agent" token for clients
-  register: agent_token
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - >
-      nomad_client_token is not defined
-      or allow_agent_read_policy.changed
-      or allow_node_write_policy.changed
+# - community.general.nomad_token:
+#     client_cert: "{{ certificate_files.cli_certificate }}"
+#     client_key: "{{ certificate_files.cli_private_key }}"
+#     global_replicated: true
+#     host: localhost
+#     name: nomad-client
+#     policies:
+#       - allow-agent-read
+#       - allow-node-write
+#     state: present
+#     token: "{{ nomad_bootstrap_token }}"
+#   environment:
+#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+#   name: Create scoped "agent" token for clients
+#   register: agent_token
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - >
+#       nomad_client_token is not defined
+#       or allow_agent_read_policy.changed
+#       or allow_node_write_policy.changed
 
-- ansible.builtin.set_fact:
-    cacheable: true
-    nomad_client_token: "{{ agent_token.result.secret_id }}"
-  name: Cache the new client token indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - agent_token.changed
+# - ansible.builtin.set_fact:
+#     cacheable: true
+#     nomad_client_token: "{{ agent_token.result.secret_id }}"
+#   name: Cache the new client token indefinitely
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - agent_token.changed
 
-- community.general.nomad_token:
-    client_cert: "{{ certificate_files.cli_certificate }}"
-    client_key: "{{ certificate_files.cli_private_key }}"
-    global_replicated: true
-    host: localhost
-    name: nomad-server
-    state: present
-    token: "{{ nomad_bootstrap_token }}"
-    token_type: management
-  environment:
-    REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
-  name: Create scoped "management" token for servers
-  register: management_token
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - nomad_server_token is not defined
+# - community.general.nomad_token:
+#     client_cert: "{{ certificate_files.cli_certificate }}"
+#     client_key: "{{ certificate_files.cli_private_key }}"
+#     global_replicated: true
+#     host: localhost
+#     name: nomad-server
+#     state: present
+#     token: "{{ nomad_bootstrap_token }}"
+#     token_type: management
+#   environment:
+#     REQUESTS_CA_BUNDLE: "{{ certificate_files.ca_certificate }}"
+#   name: Create scoped "management" token for servers
+#   register: management_token
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - nomad_server_token is not defined
 
-- ansible.builtin.set_fact:
-    cacheable: true
-    nomad_server_token: "{{ management_token.result.secret_id }}"
-  name: Cache the new server token indefinitely
-  when:
-    - inventory_hostname == groups['manager'][0]
-    - management_token.changed
+# - ansible.builtin.set_fact:
+#     cacheable: true
+#     nomad_server_token: "{{ management_token.result.secret_id }}"
+#   name: Cache the new server token indefinitely
+#   when:
+#     - inventory_hostname == groups['manager'][0]
+#     - management_token.changed
 
-- ansible.builtin.blockinfile:
-    block: |
-      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
-    group: nomad
-    marker: "# {mark} NOMAD"
-    mode: '0640'
-    owner: nomad
-    path: /etc/nomad.d/nomad.env
-  name: Set Nomad environment variables for server
-  register: server_nomad_env_file
-  when: "'manager' in group_names"
+# - ansible.builtin.blockinfile:
+#     block: |
+#       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_server_token'] }}
+#     group: nomad
+#     marker: "# {mark} NOMAD"
+#     mode: '0640'
+#     owner: nomad
+#     path: /etc/nomad.d/nomad.env
+#   name: Set Nomad environment variables for server
+#   register: server_nomad_env_file
+#   when: "'manager' in group_names"
 
-- ansible.builtin.blockinfile:
-    block: |
-      NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
+# - ansible.builtin.blockinfile:
+#     block: |
+#       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
 
-      # Required for `ExecStartPost=/usr/bin/nomad node eligibility -self -enable`
-      NOMAD_ADDR=https://localhost:4646
-      NOMAD_CACERT={{ certificate_files.ca_certificate }}
-      NOMAD_CLIENT_CERT={{ certificate_files.client_certificate }}
-      NOMAD_CLIENT_KEY={{ certificate_files.client_private_key }}
-    group: root
-    marker: "# {mark} NOMAD"
-    mode: '0640'
-    owner: root
-    path: /etc/nomad.d/nomad.env
-  name: Set Nomad environment variables for client
-  register: client_nomad_env_file
-  when: "'manager' not in group_names"
+#       # Required for `ExecStartPost=/usr/bin/nomad node eligibility -self -enable`
+#       NOMAD_ADDR=https://localhost:4646
+#       NOMAD_CACERT={{ certificate_files.ca_certificate }}
+#       NOMAD_CLIENT_CERT={{ certificate_files.client_certificate }}
+#       NOMAD_CLIENT_KEY={{ certificate_files.client_private_key }}
+#     group: root
+#     marker: "# {mark} NOMAD"
+#     mode: '0640'
+#     owner: root
+#     path: /etc/nomad.d/nomad.env
+#   name: Set Nomad environment variables for client
+#   register: client_nomad_env_file
+#   when: "'manager' not in group_names"
 
-- ansible.builtin.systemd_service:
-    daemon_reload: true
-    enabled: true
-    name: nomad
-    state: started
-  name: Start all Nomad nodes
+# - import_tasks: cni.yml
+#   when: "'manager' not in group_names"
 
-- ansible.builtin.systemd_service:
-    daemon_reload: true
-    name: nomad
-    state: restarted
-  name: Restart Nomad if configuration or service has been changed
-  when: >
-    nomad_config.changed
-    or nomad_service.changed
-    or certificates_updated
-    or server_nomad_env_file.changed
-    or client_nomad_env_file.changed
+# - ansible.builtin.systemd_service:
+#     daemon_reload: true
+#     enabled: true
+#     name: nomad
+#     state: started
+#   name: Start all Nomad nodes
 
-- ansible.builtin.user:
-    append: true
-    groups: nomad
-    name: "{{ ansible_env.SUDO_USER }}"
-  name: Add current user to nomad group
-  register: user_group
-  when: "'manager' in group_names"
+# - ansible.builtin.systemd_service:
+#     daemon_reload: true
+#     name: nomad
+#     state: restarted
+#   name: Restart Nomad if configuration or service has been changed
+#   when: >
+#     nomad_config.changed
+#     or nomad_service.changed
+#     or certificates_updated
+#     or server_nomad_env_file.changed
+#     or client_nomad_env_file.changed
+#     or cni_config.changed
 
-- ansible.builtin.blockinfile:
-    block: |
-      export NOMAD_TOKEN={{ nomad_server_token }}
-      export NOMAD_ADDR=https://localhost:4646
-      export NOMAD_CACERT={{ certificate_files.ca_certificate }}
-      export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
-      export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
-    group: "{{ ansible_env.SUDO_USER }}"
-    marker: "# {mark} NOMAD ENV VARS"
-    mode: '0640'
-    owner: "{{ ansible_env.SUDO_USER }}"
-    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
-  name: Set Nomad environment variables in .bashrc
-  register: bashrc_nomad_vars
-  when: "'manager' in group_names"
+# - ansible.builtin.user:
+#     append: true
+#     groups: nomad
+#     name: "{{ ansible_env.SUDO_USER }}"
+#   name: Add current user to nomad group
+#   register: user_group
+#   when: "'manager' in group_names"
 
-- ansible.builtin.reboot:
-  name: Reboot the server and wait for it to come back
-  when: user_group.changed or bashrc_nomad_vars.changed
+# - ansible.builtin.blockinfile:
+#     block: |
+#       export NOMAD_TOKEN={{ nomad_server_token }}
+#       export NOMAD_ADDR=https://localhost:4646
+#       export NOMAD_CACERT={{ certificate_files.ca_certificate }}
+#       export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
+#       export NOMAD_CLIENT_KEY={{ certificate_files.cli_private_key }}
+#     group: "{{ ansible_env.SUDO_USER }}"
+#     marker: "# {mark} NOMAD ENV VARS"
+#     mode: '0640'
+#     owner: "{{ ansible_env.SUDO_USER }}"
+#     path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
+#   name: Set Nomad environment variables in .bashrc
+#   register: bashrc_nomad_vars
+#   when: "'manager' in group_names"
+
+# - ansible.builtin.reboot:
+#   name: Reboot the server and wait for it to come back
+#   when: user_group.changed or bashrc_nomad_vars.changed
 ...

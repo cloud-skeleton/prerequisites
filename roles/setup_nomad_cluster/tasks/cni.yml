@@ -1,0 +1,74 @@
+---
+- community.general.github_release:
+    action: latest_release
+    repo: plugins
+    user: containernetworking
+  name: Get latest release of CNI plugin
+  register: latest_release
+
+- ansible.builtin.command:
+    cmd: /opt/cni/bin/bridge
+  changed_when: false
+  failed_when: false
+  name: Get current installed release of CNI plugin
+  register: installed_release
+
+- ansible.builtin.set_fact:
+    is_newer_release_available: "{{ latest_release.tag not in installed_release.stderr }}"
+  name: Set fact if newer release of CNI plugin is available
+
+- ansible.builtin.get_url:
+    dest: /tmp
+    force: true
+    url: https://github.com/containernetworking/plugins/releases/download/{{ latest_release.tag }}/cni-plugins-linux-{{ dpkg_arch.stdout }}-{{ latest_release.tag }}.tgz
+  name: Download latest release of CNI plugin
+  when: is_newer_release_available
+
+- ansible.builtin.file:
+    group: root
+    mode: '0750'
+    owner: root
+    path: /opt/cni/bin
+    state: directory
+  when: is_newer_release_available
+
+- ansible.builtin.unarchive:
+    dest: /opt/cni/bin
+    group: root
+    mode: '0750'
+    owner: root
+    remote_src: true
+    src: /tmp/cni-plugins-linux-{{ dpkg_arch.stdout }}-{{ latest_release.tag }}.tgz
+  when: is_newer_release_available
+
+- ansible.builtin.file:
+    path: /tmp/cni-plugins-linux-{{ dpkg_arch.stdout }}-{{ latest_release.tag }}.tgz
+    state: absent
+  when: is_newer_release_available
+
+- community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - bridge
+    - br_netfilter
+  name: Enable required kernel modules
+
+- ansible.builtin.file:
+    group: root
+    mode: '0750'
+    owner: root
+    path: /opt/cni/config
+    state: directory
+
+- ansible.builtin.template:
+    dest: /opt/cni/config/nomad.conflist
+    group: root
+    lstrip_blocks: true
+    mode: '0640'
+    owner: root
+    src: nomad.conflist.j2
+    trim_blocks: true
+  name: Configure CNI plugin
+  register: cni_config
+...
