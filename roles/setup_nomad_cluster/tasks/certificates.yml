@@ -4,6 +4,7 @@
       common_name: "{{ certificate.common_name | default('Cloud Skeleton CA', true) }}"
       country: "{{ certificate.country | default('EU', true) }}"
       days: "{{ certificate.days | default(365, true) }}"
+      days_ca: "{{ certificate.days_ca | default(3650, true) }}"
       domain_name: "{{ certificate.domain_name | default(first_manager.split('.')[1:] | join('.'), true) }}"
       locality: "{{ certificate.locality | default('Brussels', true) }}"
       organization: "{{ certificate.organization | default('Cloud Skeleton', true) }}"
@@ -55,7 +56,7 @@
         nomad tls ca create
           -common-name "{{ certificate_request.common_name }}"
           -country "{{ certificate_request.country }}"
-          -days {{ certificate_request.days }}
+          -days {{ certificate_request.days_ca }}
           -locality "{{ certificate_request.locality }}"
           -organization "{{ certificate_request.organization }}"
           -organizational-unit "{{ certificate_request.organizational_unit }}"
@@ -99,6 +100,7 @@
       cmd: >
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
+          -days {{ certificate_request.days }}
           -region global
           -server
     args:
@@ -139,6 +141,7 @@
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
           -client
+          -days {{ certificate_request.days }}
     args:
       chdir: /etc/nomad.d/certs
     name: Generate Nomad client private key and certificate
@@ -177,6 +180,7 @@
         nomad tls cert create
           -additional-dnsname="*.{{ certificate_request.domain_name }}"
           -cli
+          -days {{ certificate_request.days }}
     args:
       chdir: /etc/nomad.d/certs
     name: Generate Nomad CLI private key and certificate

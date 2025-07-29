@@ -3,6 +3,7 @@ certificate:
   common_name:
   country:
   days:
+  days_ca:
   domain_name:
   locality:
   organization:
