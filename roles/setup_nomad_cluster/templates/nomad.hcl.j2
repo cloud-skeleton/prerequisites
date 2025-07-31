@@ -62,6 +62,14 @@ enable_syslog = true
 leave_on_interrupt = true
 {% endif %}
 
+{% if 'main_worker' in group_names %}
+plugin "docker" {
+  config {
+    allow_privileged = true
+  }
+}
+{% endif %}
+
 {% if 'manager' in group_names %}
 server {
   bootstrap_expect = {{ groups['manager'] | length }}

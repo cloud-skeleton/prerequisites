@@ -9,6 +9,6 @@
     # - upgrade_system
     # - setup_firewall
     # - setup_docker
-    - setup_nomad_cluster
+    # - setup_nomad_cluster
     # - setup_volume
 ...
