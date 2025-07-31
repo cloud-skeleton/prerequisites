@@ -19,14 +19,16 @@ job "democratic-csi-node" {
                     "--csi-name=eu.cloudskeleton.csi",
                     "--server-socket=/csi-data/csi.sock",
                 ]
-                image      = "docker.io/democraticcsi/democratic-csi:latest"
-                privileged = true
+                cpu_hard_limit = true
+                image          = "docker.io/democraticcsi/democratic-csi:latest"
+                privileged     = true
             }
 
             csi_plugin {
-                id        = "eu.cloudskeleton.csi"
-                mount_dir = "/csi-data"
-                type      = "monolith"
+                health_timeout = "1m"
+                id             = "eu.cloudskeleton.csi"
+                mount_dir      = "/csi-data"
+                type           = "monolith"
             }
 
             env {
@@ -34,7 +36,7 @@ job "democratic-csi-node" {
             }
 
             resources {
-                cpu    = 400
+                cpu    = 100
                 memory = 64
             }
 
