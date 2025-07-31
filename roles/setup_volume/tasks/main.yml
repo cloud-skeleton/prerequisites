@@ -10,31 +10,39 @@
     state: latest
     update_cache: true
   name: Ensure CSI dependencies are installed
+  when: "'main_worker' in group_names"
 
-- community.docker.docker_plugin:
-    alias: democratic-csi-swarm
-    plugin_name: ghcr.io/cloud-skeleton/democratic-csi-swarm:latest
-    state: present
-    validate_certs: true
-  name: Install Democratic CSI (Swarm version) plugin
+- ansible.builtin.template:
+    dest: /tmp/csi.nomad
+    group: nomad
+    lstrip_blocks: true
+    mode: '0640'
+    owner: nomad
+    src: csi.nomad.j2
+    trim_blocks: true
+  name: Render Nomad CSI node job file
+  register: nomad_csi_job_file
+  vars:
+    csi_config: "{{ lookup('file', playbook_dir + '/../.csi.yml') }}"
+  when: inventory_hostname == groups['manager'][0]
 
-- ansible.builtin.copy:
-    dest: /etc/democratic-csi.yml
-    src: "{{ playbook_dir }}/../.csi.yml"
-  name: Copy CSI configuration
-  register: csi_configuration
+- ansible.builtin.command:
+    cmd: nomad job run /tmp/csi.nomad
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: /etc/nomad.d/certs/nomad-agent-ca.pem
+    NOMAD_CLIENT_CERT: /etc/nomad.d/certs/global-cli-nomad.pem
+    NOMAD_CLIENT_KEY: /etc/nomad.d/certs/global-cli-nomad-key.pem
+    NOMAD_TOKEN: "{{ nomad_server_token }}"
+  name: Deploy Nomad CSI node job
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_csi_job_file.changed
 
-- community.docker.docker_plugin:
-    plugin_name: democratic-csi-swarm
-    state: disable
-    validate_certs: true
-  name: Disable Democratic CSI (Swarm version) plugin
-  when: csi_configuration.changed
-
-- community.docker.docker_plugin:
-    plugin_name: democratic-csi-swarm
-    state: enable
-    validate_certs: true
-  name: Enable Democratic CSI (Swarm version) plugin
-  when: csi_configuration.changed
+- ansible.builtin.file:
+    path: /tmp/csi.nomad
+    state: absent
+  changed_when: nomad_csi_job_file.changed
+  name: Remove Nomad CSI node job file
+  when: inventory_hostname == groups['manager'][0]
 ...

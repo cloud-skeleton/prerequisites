@@ -1,0 +1,49 @@
+job "democratic-csi-node" {
+    type = "system"
+
+    constraint {
+        attribute = "${node.class}"
+        operator  = "="
+        value     = "main-worker"
+    }
+
+    group "node" {
+        task "plugin" {
+            driver = "docker"
+
+            config {
+                args = [
+                    "--driver-config-file=${NOMAD_TASK_DIR}/config.yaml",
+                    "--csi-version=1.9.0",
+                    "--log-level=silly",
+                    "--csi-name=eu.cloudskeleton.csi",
+                    "--server-socket=/csi-data/csi.sock",
+                ]
+                image      = "docker.io/democraticcsi/democratic-csi:latest"
+                privileged = true
+            }
+
+            csi_plugin {
+                id        = "eu.cloudskeleton.csi"
+                mount_dir = "/csi-data"
+                type      = "monolith"
+            }
+
+            env {
+                CSI_NODE_ID = "${attr.unique.hostname}"
+            }
+
+            resources {
+                cpu    = 500
+                memory = 256
+            }
+
+            template {
+                data        = <<EOF
+{{ csi_config }}
+EOF
+                destination = "${NOMAD_TASK_DIR}/config.yaml"
+            }
+        }
+    }
+}
