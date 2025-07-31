@@ -1,0 +1,10 @@
+capacity_min = "25GiB"
+id           = "main"
+name         = "main"
+plugin_id    = "eu.cloudskeleton.csi"
+type         = "csi"
+
+capability {
+  access_mode     = "multi-node-single-writer"
+  attachment_mode = "file-system"
+}
