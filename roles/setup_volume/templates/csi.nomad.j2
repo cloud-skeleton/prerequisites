@@ -21,6 +21,7 @@ job "democratic-csi-node" {
                 ]
                 cpu_hard_limit = true
                 image          = "docker.io/democraticcsi/democratic-csi:latest"
+                ipc_mode       = "host"
                 privileged     = true
 
                 mount {
@@ -31,7 +32,7 @@ job "democratic-csi-node" {
             }
 
             csi_plugin {
-                health_timeout = "3m"
+                health_timeout = "5m"
                 id             = "eu.cloudskeleton.csi"
                 mount_dir      = "/csi-data"
                 type           = "monolith"

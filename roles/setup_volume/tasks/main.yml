@@ -5,11 +5,35 @@
     clean: true
     install_recommends: true
     name:
+      - lsscsi
+      - multipath-tools
       - open-iscsi
       - scsitools
+      - sg3-utils
     state: latest
     update_cache: true
   name: Ensure CSI dependencies are installed
+  when: "'main_worker' in group_names"
+
+- ansible.builtin.copy:
+    content: |
+      defaults {
+        user_friendly_names yes
+        find_multipaths yes
+      }
+    dest: /etc/multipath.conf
+    group: root
+    mode: '0640'
+    owner: root
+  name: Enable multipathing
+  when: "'main_worker' in group_names"
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    enabled: true
+    name: open-iscsi
+    state: started
+  name: Start open-iscsi service
   when: "'main_worker' in group_names"
 
 - ansible.builtin.template:
