@@ -24,9 +24,9 @@ job "democratic-csi-node" {
                 privileged     = true
 
                 mount {
-                    type   = "bind"
                     source = "/"
                     target = "/host"
+                    type   = "bind"
                 }
             }
 
