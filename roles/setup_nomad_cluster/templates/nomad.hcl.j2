@@ -66,6 +66,10 @@ leave_on_interrupt = true
 plugin "docker" {
   config {
     allow_privileged = true
+
+    volumes {
+      enabled = true
+    }
   }
 }
 {% endif %}

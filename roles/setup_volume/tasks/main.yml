@@ -21,7 +21,6 @@
     src: csi.nomad.j2
     trim_blocks: true
   name: Render Nomad CSI node job file
-  register: nomad_csi_job_file
   vars:
     csi_config: "{{ lookup('file', playbook_dir + '/../.csi.yml') }}"
   when: inventory_hostname == groups['manager'][0]
@@ -37,12 +36,10 @@
   name: Deploy Nomad CSI node job
   when:
     - inventory_hostname == groups['manager'][0]
-    - nomad_csi_job_file.changed
 
 - ansible.builtin.file:
     path: /tmp/csi.nomad
     state: absent
-  changed_when: nomad_csi_job_file.changed
   name: Remove Nomad CSI node job file
   when: inventory_hostname == groups['manager'][0]
 
