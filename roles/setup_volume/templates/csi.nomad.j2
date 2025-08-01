@@ -22,6 +22,12 @@ job "democratic-csi-node" {
                 cpu_hard_limit = true
                 image          = "docker.io/democraticcsi/democratic-csi:latest"
                 privileged     = true
+
+                mount {
+                    type   = "bind"
+                    source = "/"
+                    target = "/host"
+                }
             }
 
             csi_plugin {
