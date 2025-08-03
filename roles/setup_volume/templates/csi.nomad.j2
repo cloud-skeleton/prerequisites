@@ -1,5 +1,6 @@
 job "democratic-csi-node" {
-    type = "system"
+    namespace = "system"
+    type      = "system"
 
     constraint {
         attribute = "${node.class}"
@@ -15,7 +16,7 @@ job "democratic-csi-node" {
                 args = [
                     "--driver-config-file=${NOMAD_TASK_DIR}/config.yaml",
                     "--csi-version=1.9.0",
-                    "--log-level=silly",
+                    "--log-level={{ csi_plugin_log_level }}",
                     "--csi-name=eu.cloudskeleton.csi",
                     "--server-socket=/csi-data/csi.sock",
                 ]

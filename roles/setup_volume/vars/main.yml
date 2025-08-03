@@ -1,3 +1,4 @@
 ---
+  csi_plugin_log_level: warn
   csi_plugin_timeout: 120
 ...

@@ -38,6 +38,18 @@
   name: Start open-iscsi service
   when: "'main_worker' in group_names"
 
+- ansible.builtin.command:
+    cmd: nomad namespace apply -description "System resources" system
+  changed_when: false
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: /etc/nomad.d/certs/nomad-agent-ca.pem
+    NOMAD_CLIENT_CERT: /etc/nomad.d/certs/global-cli-nomad.pem
+    NOMAD_CLIENT_KEY: /etc/nomad.d/certs/global-cli-nomad-key.pem
+    NOMAD_TOKEN: "{{ nomad_server_token }}"
+  name: Create Nomad "system" namespace
+  when: inventory_hostname == groups['manager'][0]
+
 - ansible.builtin.template:
     dest: /tmp/csi.nomad
     group: nomad
@@ -53,7 +65,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
-    cmd: nomad job plan /tmp/csi.nomad
+    cmd: nomad job plan -namespace=system /tmp/csi.nomad
   changed_when: plan_csi_job.stdout.startswith("+/-")
   environment:
     NOMAD_ADDR: https://localhost:4646
@@ -67,7 +79,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
-    cmd: nomad job run /tmp/csi.nomad
+    cmd: nomad job run -namespace=system /tmp/csi.nomad
   changed_when: plan_csi_job.changed
   environment:
     NOMAD_ADDR: https://localhost:4646
@@ -87,7 +99,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
-    cmd: nomad job status -json democratic-csi-node
+    cmd: nomad job status -namespace=system -json democratic-csi-node
   changed_when: false
   delay: 10
   environment:
