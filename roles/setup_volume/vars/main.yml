@@ -1,0 +1,3 @@
+---
+  csi_plugin_timeout: 120
+...

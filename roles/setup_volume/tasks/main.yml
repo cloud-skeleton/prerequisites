@@ -98,7 +98,7 @@
     NOMAD_TOKEN: "{{ nomad_server_token }}"
   name: Wait for Nomad CSI node deployment
   register: csi_job_status
-  retries: 18
+  retries: "{{ csi_plugin_timeout / 10 * 2 }}"
   until: (csi_job_status.stdout | from_json)[0].Allocations[0].TaskStates.plugin.Events[-1].Type == 'Plugin became healthy'
   when: inventory_hostname == groups['manager'][0]
 

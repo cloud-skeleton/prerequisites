@@ -33,7 +33,7 @@ job "democratic-csi-node" {
             }
 
             csi_plugin {
-                health_timeout = "2m"
+                health_timeout = "{{ csi_plugin_timeout }}s"
                 id             = "eu.cloudskeleton.csi"
                 mount_dir      = "/csi-data"
                 type           = "monolith"
