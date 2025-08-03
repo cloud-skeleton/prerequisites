@@ -5,14 +5,16 @@
     clean: true
     install_recommends: true
     name:
+      - cifs-utils
       - lsscsi
       - multipath-tools
+      - nfs-common
       - open-iscsi
       - scsitools
       - sg3-utils
     state: latest
     update_cache: true
-  name: Ensure CSI dependencies are installed
+  name: Ensure CSI driver's dependencies are installed
   when: "'main_worker' in group_names"
 
 - ansible.builtin.copy:
@@ -58,8 +60,7 @@
     NOMAD_CLIENT_KEY: /etc/nomad.d/certs/global-cli-nomad-key.pem
     NOMAD_TOKEN: "{{ nomad_server_token }}"
   name: Deploy Nomad CSI node job
-  when:
-    - inventory_hostname == groups['manager'][0]
+  when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.file:
     path: /tmp/csi.nomad
