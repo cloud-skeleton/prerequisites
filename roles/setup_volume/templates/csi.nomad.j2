@@ -1,4 +1,4 @@
-job "democratic-csi-node" {
+job "csi-plugin" {
     namespace = "system"
     type      = "system"
 
@@ -8,7 +8,7 @@ job "democratic-csi-node" {
         value     = "main-worker"
     }
 
-    group "node" {
+    group "democratic-csi" {
         task "plugin" {
             driver = "docker"
 

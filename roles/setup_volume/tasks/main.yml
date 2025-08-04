@@ -99,7 +99,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
-    cmd: nomad job status -namespace=system -json democratic-csi-node
+    cmd: nomad job status -namespace=system -json csi-plugin
   changed_when: false
   delay: 10
   environment:
