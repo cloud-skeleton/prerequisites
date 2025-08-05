@@ -41,7 +41,8 @@ job "csi-plugin" {
             }
 
             env {
-                CSI_NODE_ID = "${attr.unique.hostname}"
+                CSI_NODE_ID              = "${attr.unique.hostname}"
+                DEMOCRATIC_CSI_LOG_LEVEL = "{{ csi_plugin_log_level }}"
             }
 
             resources {

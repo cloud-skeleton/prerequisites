@@ -114,6 +114,11 @@
   until: (csi_job_status.stdout | from_json)[0].Allocations[0].TaskStates.plugin.Events[-1].Type == 'Plugin became healthy'
   when: inventory_hostname == groups['manager'][0]
 
+- ansible.builtin.wait_for:
+    timeout: 5
+  name: Wait a few seconds for CSI plugin to be available
+  when: inventory_hostname == groups['manager'][0]
+
 - ansible.builtin.template:
     dest: /tmp/volume.nomad
     group: nomad
