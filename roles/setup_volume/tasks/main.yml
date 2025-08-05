@@ -17,6 +17,17 @@
   name: Ensure CSI driver's dependencies are installed
   when: "'main_worker' in group_names"
 
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: nfs-common
+    state: latest
+    update_cache: true
+  name: Ensure CSI driver's dependencies are installed
+  when: "'manager' in group_names"
+
 - ansible.builtin.copy:
     content: |
       defaults {
@@ -48,6 +59,29 @@
     NOMAD_CLIENT_KEY: /etc/nomad.d/certs/global-cli-nomad-key.pem
     NOMAD_TOKEN: "{{ nomad_server_token }}"
   name: Create Nomad "system" namespace
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.posix.mount:
+    fstype: nfs
+    opts: rw,sync,hard
+    path: /tmp/data
+    src: "{{ nomad_cluster_volume_nfs_share }}"
+    state: ephemeral
+  changed_when: false
+  name: Mount NFS share to be used as Nomad CSI volume
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.builtin.file:
+    path: /tmp/data/v/data
+    state: directory
+  name: Ensure directory structure in NFS share
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.posix.mount:
+    path: /tmp/data
+    state: unmounted
+  changed_when: false
+  name: Unmount NFS share to be used as Nomad CSI volume
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.template:

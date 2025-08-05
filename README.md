@@ -96,8 +96,8 @@ graph LR
   # CIDR range of bridge network used in Nomad cluster
   NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR=10.0.0.0/20
 
-  # Nomad cluster volume NFS share (hostname/path)
-  NOMAD_CLUSTER_VOLUME_NFS_SHARE=nas.domain.com/volume1/_Nomad
+  # Nomad cluster volume NFS share (hostname:/path)
+  NOMAD_CLUSTER_VOLUME_NFS_SHARE=nas.domain.com:/volume1/_Nomad
 
   # Name of main datacenter for Nomad cluster
   NOMAD_MAIN_DATACENTER_NAME=home

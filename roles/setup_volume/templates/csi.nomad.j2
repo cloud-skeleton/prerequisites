@@ -57,8 +57,8 @@ job "csi-plugin" {
                 
                 nfs:
                     controllerBasePath: /storage
-                    shareBasePath: /{{ nomad_cluster_volume_nfs_share.split('/', 1)[1] | default('', true) }}
-                    shareHost: {{ nomad_cluster_volume_nfs_share.split('/', 1)[0] }}
+                    shareBasePath: /{{ nomad_cluster_volume_nfs_share.split(':/', 1)[1] | default('', true) }}
+                    shareHost: {{ nomad_cluster_volume_nfs_share.split(':/', 1)[0] }}
                 
                 #  Skip the automatic block-discard (TRIM) phase so mkfs doesn't
                 #  wait on the storage backend to zero/free every block. On many
