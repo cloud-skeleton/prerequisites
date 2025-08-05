@@ -69,52 +69,6 @@ graph LR
 
 ### 2. Configure the Scripts
 
-- Create a file named `.csi.yml` in `/tmp/cloud-skeleton-prerequisites`; **[Ansible][ansible]** will then deploy it as `/etc/democratic-csi.yml` on each **[Docker Swarm][docker-swarm]** node. This file contains the **[Democratic CSI][democratic-csi]** plugin configuration used for your persistent volumes in the **[Docker Swarm][docker-swarm]** cluster.
-
-  Example for Synology devices behind reverse proxy:
-
-  ```yaml
-  driver: synology-iscsi
-
-  httpConnection:
-    host: <HOSTNAME>
-    password: <PASSWORD>
-    port: 443
-    protocol: https
-    serialize: true
-    session: democratic-csi
-    username: <USERNAME>
-
-  iscsi:
-    baseiqn: iqn.2025-07.<REVERSE DOMAIN>:democratic-csi.
-    lunSnapshotTemplate:
-      is_app_consistent: true
-      is_locked: true
-    lunTemplate:
-      type: BLUN
-    targetPortal: <HOSTNAME>
-    targetTemplate:
-      auth_type: 0
-      max_sessions: 0
-
-  # Skip the automatic block‐discard (TRIM) phase so mkfs doesn’t
-  # wait on the storage backend to zero/free every block. On many
-  # iSCSI or thin‐provisioned volumes the discard step can stall
-  # mkfs for minutes—`-E nodiscard` makes the format finish immediately.
-  node:
-    format:
-      ext4:
-        customOptions:
-          - -E
-          - nodiscard
-  ```
-
-  **Placeholder explanations:**
-  - `<HOSTNAME>`: the fully qualified domain name or IP address of your Synology NAS (e.g. `nas.domain.com`).  
-  - `<USERNAME>`: the DSM user account (with Storage Manager API privileges) that the CSI driver will authenticate as.  
-  - `<PASSWORD>`: the password for the above DSM user.  
-  - `<REVERSE DOMAIN>`: your NAS’s domain in reverse order (e.g. for `domain.com`, use `com.domain`).  
-
 - Create a file named `.env` in `/tmp/cloud-skeleton-prerequisites` folder with the following content:
 
   ```bash
@@ -141,6 +95,9 @@ graph LR
 
   # CIDR range of bridge network used in Nomad cluster
   NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR=10.0.0.0/20
+
+  # Nomad cluster volume NFS share (hostname/path)
+  NOMAD_CLUSTER_VOLUME_NFS_SHARE=nas.domain.com/volume1/_Nomad
 
   # Name of main datacenter for Nomad cluster
   NOMAD_MAIN_DATACENTER_NAME=home
@@ -183,6 +140,9 @@ graph LR
 
   - **`NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR`**  
     CIDR range of bridge network used in Nomad cluster.
+
+  - **`NOMAD_CLUSTER_VOLUME_NFS_SHARE`**  
+    Nomad cluster volume NFS share (hostname/path).
 
   - **`NOMAD_MAIN_DATACENTER_NAME`**  
     Name of main datacenter for Nomad cluster.

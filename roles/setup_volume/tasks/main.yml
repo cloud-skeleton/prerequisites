@@ -60,8 +60,6 @@
     trim_blocks: true
   changed_when: false
   name: Render Nomad CSI node job file
-  vars:
-    csi_config: "{{ lookup('file', playbook_dir + '/../.csi.yml') }}"
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
