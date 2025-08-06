@@ -1,4 +1,5 @@
 ---
   csi_plugin_log_level: warn
   csi_plugin_timeout: 180
+  csi_volume_name: data
 ...

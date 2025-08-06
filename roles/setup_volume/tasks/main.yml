@@ -72,7 +72,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.file:
-    path: /tmp/data/v/data
+    path: "/tmp/data/v/{{ csi_volume_name }}"
     state: directory
   name: Ensure directory structure in NFS share
   when: inventory_hostname == groups['manager'][0]
