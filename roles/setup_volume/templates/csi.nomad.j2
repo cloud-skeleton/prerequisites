@@ -18,7 +18,7 @@ job "csi-plugin" {
                     "--type=monolith",
                     "--log-level={{ csi_plugin_log_level }}",
                     "--nfs-server={{ nomad_cluster_volume_nfs_share }}",
-                    "--mount-options=defaults,vers=4,nconnect=16,lookupcache=positive,noatime",
+                    "--mount-options=vers={{ csi_plugin_nfs_version }},lookupcache=positive",
                     "--allow-nested-volumes"
                 ]
                 cpu_hard_limit = true
