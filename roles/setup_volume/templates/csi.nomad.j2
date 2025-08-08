@@ -8,70 +8,30 @@ job "csi-plugin" {
         value     = "main-worker"
     }
 
-    group "democratic-csi" {
+    group "k8s-nfsplugin" {
         task "plugin" {
             driver = "docker"
 
             config {
                 args = [
-                    "--driver-config-file=${NOMAD_TASK_DIR}/config.yaml",
-                    "--csi-version=1.9.0",
-                    "--log-level={{ csi_plugin_log_level }}",
-                    "--csi-name=eu.cloudskeleton.csi",
-                    "--server-socket=/csi-data/csi.sock",
+                    "-drivername=csi.cloudskeleton.eu",
+                    "-nodeid=${attr.unique.hostname}",
+                    "-v={{ csi_plugin_log_level }}"
                 ]
                 cpu_hard_limit = true
-                image          = "docker.io/democraticcsi/democratic-csi:latest"
-                ipc_mode       = "host"
-                network_mode   = "host"
+                image          = "registry.k8s.io/sig-storage/nfsplugin:v{{ csi_plugin_version }}"
                 privileged     = true
-
-                mount {
-                    source = "/"
-                    target = "/host"
-                    type   = "bind"
-                }
             }
 
             csi_plugin {
-                health_timeout = "{{ csi_plugin_timeout }}s"
-                id             = "eu.cloudskeleton.csi"
-                mount_dir      = "/csi-data"
-                type           = "monolith"
-            }
-
-            env {
-                CSI_NODE_ID              = "${attr.unique.hostname}"
-                DEMOCRATIC_CSI_LOG_LEVEL = "{{ csi_plugin_log_level }}"
+                id        = "csi.cloudskeleton.eu"
+                mount_dir = "/tmp"
+                type      = "monolith"
             }
 
             resources {
-                cpu    = 100
-                memory = 64
-            }
-
-            template {
-                data        = <<-EOF
-                driver: nfs-client
-                instance_id: {{ "{{" }} env "attr.unique.hostname" {{ "}}" }}
-                
-                nfs:
-                    controllerBasePath: /storage
-                    shareBasePath: /{{ nomad_cluster_volume_nfs_share.split(':/', 1)[1] | default('', true) }}
-                    shareHost: {{ nomad_cluster_volume_nfs_share.split(':/', 1)[0] }}
-                
-                #  Skip the automatic block-discard (TRIM) phase so mkfs doesn't
-                #  wait on the storage backend to zero/free every block. On many
-                #  iSCSI or thin-provisioned volumes the discard step can stall
-                #  mkfs for minutes—`-E nodiscard` makes the format finish immediately.
-                node:
-                    format:
-                        ext4:
-                            customOptions:
-                                - -E
-                                - nodiscard
-                EOF
-                destination = "${NOMAD_TASK_DIR}/config.yaml"
+                cpu    = 50
+                memory = 16
             }
         }
     }
