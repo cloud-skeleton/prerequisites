@@ -8,30 +8,34 @@ job "csi-plugin" {
         value     = "main-worker"
     }
 
-    group "k8s-nfsplugin" {
+    group "rocketduck/csi-plugin-nfs" {
         task "plugin" {
             driver = "docker"
 
             config {
                 args = [
-                    "-drivername=csi.cloudskeleton.eu",
-                    "-nodeid=${attr.unique.hostname}",
-                    "-v={{ csi_plugin_log_level }}"
+                    "--node-id=${attr.unique.hostname}",
+                    "--type=monolith",
+                    "--log-level={{ csi_plugin_log_level }}",
+                    "--nfs-server={{ nomad_cluster_volume_nfs_share }}",
+                    "--mount-options=defaults,vers=4,nconnect=16,lookupcache=positive,noatime",
+                    "--allow-nested-volumes"
                 ]
                 cpu_hard_limit = true
-                image          = "registry.k8s.io/sig-storage/nfsplugin:v{{ csi_plugin_version }}"
+                image          = "registry.gitlab.com/rocketduck/csi-plugin-nfs:{{ csi_plugin_version }}"
+                network_mode   = "host"
                 privileged     = true
             }
 
             csi_plugin {
-                id        = "csi.cloudskeleton.eu"
-                mount_dir = "/tmp"
-                type      = "monolith"
+                health_timeout = "2m"
+                id             = "csi.cloudskeleton.eu"
+                type           = "monolith"
             }
 
             resources {
                 cpu    = 50
-                memory = 16
+                memory = 32
             }
         }
     }

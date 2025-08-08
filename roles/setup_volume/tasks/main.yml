@@ -105,7 +105,6 @@
     NOMAD_CLIENT_KEY: /etc/nomad.d/certs/global-cli-nomad-key.pem
     NOMAD_TOKEN: "{{ nomad_server_token }}"
   name: Deploy Nomad CSI plugin job
-  # register: deploy_csi_job
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.file:
@@ -127,37 +126,9 @@
     NOMAD_TOKEN: "{{ nomad_server_token }}"
   name: Wait for Nomad CSI node deployment
   register: csi_job_status
-  retries: 3
-  until: (csi_job_status.stdout | from_json)[0].Allocations[0].TaskStates.plugin.Events[-1].Type == 'Plugin became healthy'
+  retries: 12
+  until: (csi_job_status.stdout | from_json)[0].Allocations[0].TaskStates.plugin.Events[-1].Type | default('', true) == 'Plugin became healthy'
   when: inventory_hostname == groups['manager'][0]
-
-# # - ansible.builtin.wait_for:
-# #     timeout: 5
-# #   name: Wait a few seconds for CSI plugin to be available
-# #   when: inventory_hostname == groups['manager'][0]
-
-# # - ansible.posix.mount:
-# #     fstype: nfs
-# #     opts: rw,sync,hard
-# #     path: /tmp/data
-# #     src: "{{ nomad_cluster_volume_nfs_share }}"
-# #     state: ephemeral
-# #   changed_when: false
-# #   name: Mount NFS share to be used as Nomad CSI volume
-# #   when: inventory_hostname == groups['manager'][0]
-
-# # - ansible.builtin.file:
-# #     path: "/tmp/data/v/{{ csi_volume_name }}"
-# #     state: directory
-# #   name: Ensure directory structure in NFS share
-# #   when: inventory_hostname == groups['manager'][0]
-
-# # - ansible.posix.mount:
-# #     path: /tmp/data
-# #     state: unmounted
-# #   changed_when: false
-# #   name: Unmount NFS share to be used as Nomad CSI volume
-# #   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.template:
     dest: /tmp/volume.nomad
@@ -172,7 +143,7 @@
   when: inventory_hostname == groups['manager'][0]
 
 - ansible.builtin.command:
-    cmd: nomad volume register /tmp/volume.nomad
+    cmd: nomad volume create /tmp/volume.nomad
   changed_when: false
   environment:
     NOMAD_ADDR: https://localhost:4646

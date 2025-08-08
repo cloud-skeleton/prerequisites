@@ -1,23 +1,9 @@
-id           = "{{ csi_volume_name }}"
-name         = "{{ csi_volume_name }}"
-plugin_id    = "csi.cloudskeleton.eu"
-type         = "csi"
+id        = "{{ csi_volume_name }}"
+name      = "{{ csi_volume_name }}"
+plugin_id = "csi.cloudskeleton.eu"
+type      = "csi"
 
 capability {
   access_mode     = "multi-node-multi-writer"
   attachment_mode = "file-system"
-}
-
-context {
-  onDelete = "archive"
-  server   = "{{ nomad_cluster_volume_nfs_share.split(':/', 1)[0] }}"
-  share    = "/{{ nomad_cluster_volume_nfs_share.split(':/', 1)[1] | default('', true) }}"
-  subDir   = "/"
-}
-
-mount_options {
-  mount_flags = [
-    "nfsvers=4",
-    "minorversion=1"
-  ]
 }

@@ -1,5 +1,5 @@
 ---
-  csi_plugin_log_level: 5
-  csi_plugin_version: 4.11.0
+  csi_plugin_log_level: DEBUG
+  csi_plugin_version: 1.1.0
   csi_volume_name: data
 ...
