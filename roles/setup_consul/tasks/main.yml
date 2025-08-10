@@ -1,0 +1,42 @@
+---
+- ansible.builtin.set_fact:
+    all_manager_ips: >-
+      {{
+        groups['manager']
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address') | flatten
+      }}
+  name: Set all managers IP list
+  register: all_manager_ips_fact
+
+- ansible.builtin.set_fact:
+    all_worker_ips: >-
+      {{
+        (groups['main_worker'] + groups['ingress_worker'])
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address') | flatten
+      }}
+  name: Set all workers IP list
+  register: all_worker_ips_fact
+
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    name: consul
+    state: latest
+    update_cache: true
+  name: Install Consul dependencies packages
+
+- ansible.builtin.template:
+    dest: /etc/consul.d/consul.hcl
+    group: consul
+    lstrip_blocks: true
+    mode: '0640'
+    owner: consul
+    src: consul.hcl.j2
+    trim_blocks: true
+  name: Configure Consul
+  register: consul_config
+...
