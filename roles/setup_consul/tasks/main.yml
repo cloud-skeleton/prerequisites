@@ -19,6 +19,61 @@
   name: Set all workers IP list
   register: all_worker_ips_fact
 
+- ansible.builtin.set_fact:
+    worker_ips: >-
+      {{
+        ansible_play_hosts
+        | reject('in', groups['manager'])
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address')
+        | reject('equalto', ansible_default_ipv4.address)
+        | list
+      }}
+  name: Collect other worker IPs
+
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', worker_ips, consul_client_to_server_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow Consul client to server ports
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+  when: "'manager' in group_names"
+
+- ansible.builtin.set_fact:
+    manager_ips: >-
+      {{
+        groups['manager']
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address')
+        | reject('equalto', ansible_default_ipv4.address)
+        | list
+      }}
+  name: Collect other manager IPs
+
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', manager_ips, consul_server_to_server_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow Consul server to server ports
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+  when: "'manager' in group_names"
+
 - community.general.ufw:
     from_ip: "{{ ip }}"
     log: true
