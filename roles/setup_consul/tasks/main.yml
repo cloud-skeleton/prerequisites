@@ -19,6 +19,22 @@
   name: Set all workers IP list
   register: all_worker_ips_fact
 
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
+  loop: "{{ query('nested', nomad_server_http_allow_ip_cidrs, consul_server_admin_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow admin access to Consul server HTTP endpoints
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+  when: "'manager' in group_names"
+
 - ansible.builtin.apt:
     autoclean: true
     autoremove: true
@@ -44,4 +60,21 @@
     cmd: consul validate /etc/consul.d
   name: Validate Consul configuration
   when: consul_config.changed
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    enabled: true
+    name: consul
+    state: started
+  name: Start first Consul manager
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: consul
+    state: restarted
+  name: Restart Consul if configuration or service has been changed
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - consul_config.changed
 ...
