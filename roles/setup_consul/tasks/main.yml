@@ -39,4 +39,9 @@
     trim_blocks: true
   name: Configure Consul
   register: consul_config
+
+- ansible.builtin.command:
+    cmd: consul validate /etc/consul.d
+  name: Validate Consul configuration
+  when: consul_config.changed
 ...

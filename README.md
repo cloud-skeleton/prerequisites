@@ -14,7 +14,7 @@ It is designed to be safe, modular, and self-documenting — perfect for bare-me
 
 To set up a resilient and secure infrastructure, you must provision **at least 3 nodes**:
 
-1. 🧐 **Manager Node** – Orchestrates the **[Docker Swarm][docker-swarm]** cluster.  
+1. 🧐 **Manager Node** – Orchestrates the **[Hashicorp Nomad][hashicorp-nomad]** cluster.  
 2. 🧱 **Main Worker Node** – Runs core application workloads.  
 3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik][traefik]** or a similar reverse proxy.
 
@@ -39,11 +39,9 @@ graph LR
 
   external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br><b>443 / tcp</b> <i>(HTTPS)</i><br><b>443 / udp</b> <i>(QUIC)</i>"| ingress
 
-  ingress <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| worker
+  ingress -->|"<b>4646 / tcp</b> <i>(HTTP API)</i><br><b>4647 / tcp</b> <i>(RPC)</i>"| manager
 
-  ingress <-->|"<b>2377 / tcp</b> <i>(Swarm Control)</i><br><b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
-
-  worker <-->|"<b>2377 / tcp</b> <i>(Swarm Control)</i><br><b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
+  worker -->|"<b>4646 / tcp</b> <i>(HTTP API)</i><br><b>4647 / tcp</b> <i>(RPC)</i>"| manager
 ```
 
 ---
@@ -133,7 +131,7 @@ graph LR
     DNS servers to configure on each main-worker node.
 
   - **`NODE_MANAGERS`**  
-    A space-separated list of manager hostnames. These nodes run the **[Docker Swarm][docker-swarm]** manager services.
+    A space-separated list of manager hostnames. These nodes run the **[Hashicorp Nomad][hashicorp-nomad]** manager services.
 
   - **`NODE_MANAGERS_NAMESERVERS`**  
     DNS servers to configure on each manager node.
@@ -264,7 +262,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 [democratic-csi]: https://github.com/democratic-csi/democratic-csi/tree/master/examples
 [docker]: https://docs.docker.com/get-started/  
 [docker-compose]: https://docs.docker.com/compose/gettingstarted/  
-[docker-swarm]: https://docs.docker.com/engine/swarm/  
+[hashicorp-nomad]: https://developer.hashicorp.com/nomad/tutorials/get-started 
 [git]: https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup  
 [git-lfs]: https://github.com/git-lfs/git-lfs/wiki/Tutorial  
 [nfs]: https://www.techtarget.com/searchenterprisedesktop/definition/Network-File-System  
