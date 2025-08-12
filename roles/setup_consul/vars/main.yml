@@ -1,4 +1,8 @@
 ---
+consul_client_to_client_ports:
+  - 8301/tcp
+  - 8301/udp
+
 consul_client_to_server_ports:
   - 8300/tcp
   - 8301/tcp

@@ -37,6 +37,22 @@
     proto: "{{ proto }}"
     rule: allow
     to_port: "{{ port_no }}"
+  loop: "{{ query('nested', worker_ips, consul_client_to_client_ports | map('split', '/') | list) }}"
+  loop_control:
+    loop_var: rule
+  name: Allow Consul client to client ports
+  vars:
+    ip: "{{ rule[0] }}"
+    port_no: "{{ rule[1] }}"
+    proto: "{{ rule[2] }}"
+  when: "'manager' not in group_names"
+
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: "{{ proto }}"
+    rule: allow
+    to_port: "{{ port_no }}"
   loop: "{{ query('nested', worker_ips, consul_client_to_server_ports | map('split', '/') | list) }}"
   loop_control:
     loop_var: rule
