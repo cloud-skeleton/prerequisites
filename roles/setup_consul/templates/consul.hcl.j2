@@ -1,3 +1,11 @@
+acl = {
+  enabled = true
+  down_policy = "extend-cache"
+  default_policy = "deny"
+  enable_key_list_policy = true
+  enable_token_persistence = true
+}
+
 bind_addr = "{{ ansible_default_ipv4.address }}"
 {% if 'manager' in group_names %}
 bootstrap_expect = {{ groups['manager'] | length }}
@@ -21,6 +29,9 @@ discard_check_output = true //@TODO ???
 discovery_max_stale = "87600h" //@TODO ???
 enable_agent_tls_for_checks = false //@TODO ???
 enable_local_script_checks = true
+{% if 'manager' in group_names %}
+encrypt = "{{ hostvars[groups['manager'][0]]['consul_encryption_string'] }}"
+{% endif %}
 
 performance = {
   enable_xds_load_balancing = true //@TODO ???

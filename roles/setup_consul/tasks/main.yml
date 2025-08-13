@@ -116,6 +116,44 @@
     update_cache: true
   name: Install Consul dependencies packages
 
+- ansible.builtin.slurp:
+    src: /home/ansible/.bashrc
+  name: Read remote .bashrc into a variable
+  register: bashrc_file
+
+- ansible.builtin.set_fact:
+    consul_completion_present: >
+      {{ 
+        ('complete -C /usr/bin/consul consul')
+        in (bashrc_file.content | b64decode)
+      }}
+  name: Check for existing Consul autocomplete line in .bashrc
+
+- ansible.builtin.command:
+    cmd: consul -autocomplete-install
+  become: false
+  changed_when: false
+  name: Add Consul autocomplete configuration
+  when: not consul_completion_present
+
+- ansible.builtin.command:
+    cmd: consul keygen
+  name: Generate 32 byte random string for encryption
+  register: encryption_string
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - consul_encryption_string is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    consul_encryption_string: "{{ encryption_string.stdout }}"
+  name: Cache the new 32 byte encryption string indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - encryption_string.changed
+
+# - import_tasks: certificates.yml
+
 - ansible.builtin.template:
     dest: /etc/consul.d/consul.hcl
     group: consul
@@ -147,5 +185,25 @@
   name: Restart Consul if configuration or service has been changed
   when:
     - inventory_hostname == groups['manager'][0]
-    - consul_config.changed
+    - >
+      consul_config.changed
+    # or certificates_updated
+
+- community.general.consul_acl_bootstrap:
+    # ca_path: "{{ certificate_files.ca_certificate }}"
+    # scheme: https
+    state: present
+  name: Create Consul ACL boostrap token
+  register: bootstrap_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - consul_bootstrap_token is not defined
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    consul_bootstrap_token: "{{ bootstrap_token.result.SecretID }}"
+  name: Cache the new bootstrap token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - bootstrap_token.changed
 ...

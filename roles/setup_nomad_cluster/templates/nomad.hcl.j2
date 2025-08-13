@@ -78,7 +78,7 @@ plugin "docker" {
 server {
   bootstrap_expect = {{ groups['manager'] | length }}
   enabled = true
-  encrypt = "{{ nomad_encryption_string }}"
+  encrypt = "{{ hostvars[groups['manager'][0]]['nomad_encryption_string'] }}"
   // @TODO: investigate later
   // https://developer.hashicorp.com/nomad/docs/configuration/server#oidc_issuer
   // oidc_issuer = ""
