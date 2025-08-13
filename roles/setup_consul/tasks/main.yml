@@ -423,4 +423,28 @@
     consul_config.changed
     or agent_consul_env_file.changed
   #  or certificates_updated
+
+- ansible.builtin.user:
+    append: true
+    groups: consul
+    name: "{{ ansible_env.SUDO_USER }}"
+  name: Add current user to consul group
+  register: user_group
+  when: "'manager' in group_names"
+
+- ansible.builtin.blockinfile:
+    block: |
+      export CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_bootstrap_token }}
+    group: "{{ ansible_env.SUDO_USER }}"
+    marker: "# {mark} CONSUL ENV VARS"
+    mode: '0640'
+    owner: "{{ ansible_env.SUDO_USER }}"
+    path: "/home/{{ ansible_env.SUDO_USER }}/.bashrc"
+  name: Set Consul environment variables in .bashrc
+  register: bashrc_nomad_vars
+  when: "'manager' in group_names"
+
+- ansible.builtin.reboot:
+  name: Reboot the server and wait for it to come back
+  when: user_group.changed or bashrc_nomad_vars.changed
 ...

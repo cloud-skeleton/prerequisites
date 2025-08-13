@@ -447,7 +447,7 @@
 
 - ansible.builtin.blockinfile:
     block: |
-      export NOMAD_TOKEN={{ nomad_server_token }}
+      export NOMAD_TOKEN={{ hostvars[groups['manager'][0]].nomad_server_token }}
       export NOMAD_ADDR=https://localhost:4646
       export NOMAD_CACERT={{ certificate_files.ca_certificate }}
       export NOMAD_CLIENT_CERT={{ certificate_files.cli_certificate }}
