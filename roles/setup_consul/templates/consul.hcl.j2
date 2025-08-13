@@ -32,6 +32,7 @@ enable_local_script_checks = true
 {% if 'manager' in group_names %}
 encrypt = "{{ hostvars[groups['manager'][0]]['consul_encryption_string'] }}"
 {% endif %}
+node_name = "{{ inventory_hostname_short }}"
 
 performance = {
   enable_xds_load_balancing = true //@TODO ???
