@@ -192,7 +192,6 @@
 - community.general.consul_acl_bootstrap:
     # ca_path: "{{ certificate_files.ca_certificate }}"
     # scheme: https
-    state: present
   name: Create Consul ACL boostrap token
   register: bootstrap_token
   when:
@@ -206,4 +205,50 @@
   when:
     - inventory_hostname == groups['manager'][0]
     - bootstrap_token.changed
+
+- community.general.consul_token:
+    # ca_path: "{{ certificate_files.ca_certificate }}"
+    description: "{{ item }} agent token"
+    local: false
+    node_identities:
+      - datacenter: "{{ nomad_main_datacenter_name }}"
+        node_name: "{{ hostvars[item].inventory_hostname_short }}"
+    policies: []
+    roles: []
+    # scheme: https
+    service_identities: []
+    token: "{{ consul_bootstrap_token }}"
+  loop: "{{ groups['all'] }}"
+  name: Create scoped "agent" tokens for all nodes
+  register: agent_tokens
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      consul_agent_tokens is not defined
+      or item not in consul_agent_tokens
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    consul_agent_tokens: >
+      {{
+        consul_agent_tokens | default({}, true) | combine(
+          dict(
+            agent_tokens.results | rejectattr('skipped', 'defined') | map(attribute='item')
+              | zip(agent_tokens.results | rejectattr('skipped', 'defined') | map(attribute='token.SecretID'))
+          )
+        )
+      }}
+  name: Cache all agent tokens indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - agent_tokens.changed
+
+# - ansible.builtin.file:
+#     group: consul
+#     mode: '0750'
+#     owner: consul
+#     path: /etc/consul.d/policies
+#     state: directory
+#   name: Setup Consul policies folder permissions
+#   when: "'manager' in group_names"
 ...
