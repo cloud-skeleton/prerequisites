@@ -19,8 +19,16 @@ disable_remote_exec = true //@TODO ???
 disable_update_check = true
 discard_check_output = true //@TODO ???
 discovery_max_stale = "87600h" //@TODO ???
+enable_agent_tls_for_checks = false //@TODO ???
+enable_local_script_checks = true
 
+performance = {
+  enable_xds_load_balancing = true //@TODO ???
+  raft_multiplier = 1
+}
 
+// pid_file = "" //@TODO ???
+primary_datacenter = "{{ nomad_main_datacenter_name }}"
 
 retry_join = [
   {% for host in groups['manager'] %}
@@ -31,7 +39,10 @@ retry_join = [
 
 {% if 'manager' in group_names %}
 server = true
+{% endif %}
+translate_wan_addrs = true //@TODO ???
 
+{% if 'manager' in group_names %}
 ui_config {
   enabled = true
 }
