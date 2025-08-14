@@ -31,6 +31,11 @@ performance = {
   raft_multiplier = 1
 }
 
+ports = {
+  http = -1
+  https = 8501
+}
+
 primary_datacenter = "{{ nomad_main_datacenter_name }}"
 
 retry_join = [
@@ -43,6 +48,20 @@ retry_join = [
 {% if 'manager' in group_names %}
 server = true
 {% endif %}
+
+tls = {
+  defaults = {
+    ca_file = "{{ certificate_files.ca_certificate }}"
+    cert_file = "{{ certificate_files.server_certificate if 'manager' in group_names else certificate_files.client_certificate }}"
+    key_file = "{{ certificate_files.server_private_key if 'manager' in group_names else certificate_files.client_private_key }}"
+    verify_incoming = true
+    verify_outgoing = true
+    verify_server_hostname = true
+  }
+  https = {
+    verify_incoming = false
+  }
+}
 
 translate_wan_addrs = true //@TODO ???
 
