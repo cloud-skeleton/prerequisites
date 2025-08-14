@@ -1,5 +1,9 @@
 ---
 - ansible.builtin.set_fact:
+    first_manager: "{{ groups['manager'][0] }}"
+  name: Set first manager instance
+
+- ansible.builtin.set_fact:
     all_manager_ips: >-
       {{
         groups['manager']
@@ -152,7 +156,7 @@
     - inventory_hostname == groups['manager'][0]
     - encryption_string.changed
 
-# - import_tasks: certificates.yml
+- import_tasks: certificates.yml
 
 - ansible.builtin.template:
     dest: /etc/consul.d/consul.hcl

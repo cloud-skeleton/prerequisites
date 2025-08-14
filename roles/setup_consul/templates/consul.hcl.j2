@@ -1,24 +1,18 @@
 acl = {
-  enabled = true
-  down_policy = "extend-cache"
   default_policy = "deny"
+  down_policy = "extend-cache"
   enable_key_list_policy = true
   enable_token_persistence = true
+  enable_token_replication = true
+  enabled = true
 }
 
 bind_addr = "{{ ansible_default_ipv4.address }}"
+
 {% if 'manager' in group_names %}
 bootstrap_expect = {{ groups['manager'] | length }}
 client_addr = "0.0.0.0"
 {% endif %}
-
-// config_entries = {
-//   {% if 'manager' in group_names %}
-//   bootstrap = {
-//     // @TODO https://developer.hashicorp.com/consul/docs/fundamentals/config-entry
-//   }
-//   {% endif %}
-// }
 
 datacenter = "{{ nomad_main_datacenter_name }}"
 data_dir = "/opt/consul"
@@ -37,7 +31,6 @@ performance = {
   raft_multiplier = 1
 }
 
-// pid_file = "" //@TODO ???
 primary_datacenter = "{{ nomad_main_datacenter_name }}"
 
 retry_join = [
@@ -50,6 +43,7 @@ retry_join = [
 {% if 'manager' in group_names %}
 server = true
 {% endif %}
+
 translate_wan_addrs = true //@TODO ???
 
 {% if 'manager' in group_names %}
