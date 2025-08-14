@@ -1,0 +1,154 @@
+---
+- ansible.builtin.file:
+    group: consul
+    mode: '0750'
+    owner: consul
+    path: /etc/consul.d/policies
+    state: directory
+  name: Setup Consul policies folder permissions
+  when: "'manager' in group_names"
+
+- ansible.builtin.copy:
+    content: |
+      agent_prefix  "" {
+        policy = "read"
+      }
+    dest: /etc/consul.d/policies/allow-agent-read.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-agent-read" policy HCL
+  register: allow_agent_read_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow agent read access"
+      -name allow-agent-read
+      -rules @/etc/consul.d/policies/allow-agent-read.hcl
+  # environment:
+  #   NOMAD_ADDR: https://localhost:4646
+  #   NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+  #   NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+  #   NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  name: Create the "allow-agent-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_agent_read_policy.changed
+
+- ansible.builtin.copy:
+    content: |
+      service_prefix "" {
+        policy = "write"
+      }
+    dest: /etc/consul.d/policies/allow-service-write.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-service-write" policy HCL
+  register: allow_service_write_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow service write access"
+      -name allow-service-write
+      -rules @/etc/consul.d/policies/allow-service-write.hcl
+  # environment:
+  #   NOMAD_ADDR: https://localhost:4646
+  #   NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+  #   NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+  #   NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  name: Create the "allow-service-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_service_write_policy.changed
+
+# - ansible.builtin.copy:
+#     content: |
+#       node_prefix "" {
+#         policy = "write"
+#       }
+#     dest: /etc/consul.d/policies/allow-node-write.hcl
+#     group: consul
+#     mode: '0750'
+#     owner: consul
+#   name: Write out the "allow-node-write" policy HCL
+#   register: allow_node_write_policy
+#   when: "'manager' in group_names"
+
+# - ansible.builtin.copy:
+#     content: |
+#       session_prefix "" {
+#         policy = "write"
+#       }
+#     dest: /etc/consul.d/policies/allow-session-write.hcl
+#     group: consul
+#     mode: '0750'
+#     owner: consul
+#   name: Write out the "allow-session-write" policy HCL
+#   register: allow_session_write_policy
+#   when: "'manager' in group_names"
+
+# - ansible.builtin.copy:
+#     content: |
+#       key_prefix "" {
+#         policy = "write"
+#       }
+#     dest: /etc/consul.d/policies/allow-key-write.hcl
+#     group: consul
+#     mode: '0750'
+#     owner: consul
+#   name: Write out the "allow-key-write" policy HCL
+#   register: allow_key_write_policy
+#   when: "'manager' in group_names"
+
+
+- community.general.consul_token:
+    # ca_path: "{{ certificate_files.ca_certificate }}"
+    description: Nomad agent token
+    local: false
+    node_identities: []
+    policies:
+      - name: allow-agent-read
+      - name: allow-service-write
+    roles: []
+    # scheme: https
+    service_identities: []
+    token: "{{ consul_bootstrap_token }}"
+  name: Create scoped Nomad "agent" token
+  register: nomad_agent_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      allow_agent_read_policy.changed
+      or allow_service_write_policy.changed
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    consul_nomad_agent_token: "{{ nomad_agent_token.token.SecretID }}"
+  name: Cache the new Nomad agent token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_agent_token.changed
+
+- ansible.builtin.blockinfile:
+    block: |
+      CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_agent_token }}
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    marker: "# {mark} CONSUL"
+    mode: '0640'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    path: /etc/nomad.d/nomad.env
+  name: Set Nomad environment variables for Consul
+  register: nomad_env_file
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: nomad
+    state: restarted
+  name: Restart Nomad if configuration has been changed
+  when: nomad_env_file.changed
+...
