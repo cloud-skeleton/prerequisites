@@ -99,11 +99,11 @@
 
 - ansible.builtin.blockinfile:
     block: |
-      export CONSUL_CACERT={{ hostvars[groups['manager'][0]].certificate_files.ca_certificate }}
-      export CONSUL_CLIENT_CERT={{ hostvars[groups['manager'][0]].certificate_files.cli_certificate }}
-      export CONSUL_CLIENT_KEY={{ hostvars[groups['manager'][0]].certificate_files.cli_private_key }}
-      export CONSUL_HTTP_ADDR=https://localhost:8501
-      export CONSUL_HTTP_SSL=true
+      CONSUL_CACERT={{ hostvars[groups['manager'][0]].certificate_files.ca_certificate }}
+      CONSUL_CLIENT_CERT={{ hostvars[groups['manager'][0]].certificate_files.cli_certificate }}
+      CONSUL_CLIENT_KEY={{ hostvars[groups['manager'][0]].certificate_files.cli_private_key }}
+      CONSUL_HTTP_ADDR=localhost:8501
+      CONSUL_HTTP_SSL=true
       CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_agent_token }}
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     marker: "# {mark} CONSUL"
