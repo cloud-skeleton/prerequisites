@@ -113,10 +113,19 @@
   name: Set Nomad environment variables for Consul
   register: nomad_env_file
 
+- ansible.builtin.user:
+    append: true
+    groups: consul
+    name: nomad
+  name: Add nomad user to consul group
+  register: nomad_user_group
+
 - ansible.builtin.systemd_service:
     daemon_reload: true
     name: nomad
     state: restarted
   name: Restart Nomad if configuration has been changed
-  when: nomad_env_file.changed
+  when: >
+    nomad_env_file.changed
+    or nomad_user_group.changed
 ...
