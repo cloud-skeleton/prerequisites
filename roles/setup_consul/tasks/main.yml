@@ -68,7 +68,7 @@
     proto: "{{ proto }}"
     rule: allow
     to_port: "{{ port_no }}"
-  loop: "{{ query('nested', manager_ips, consul_client_to_server_ports | map('split', '/') | list) }}"
+  loop: "{{ query('nested', worker_ips, consul_client_to_server_ports | map('split', '/') | list) }}"
   loop_control:
     loop_var: rule
   name: Allow Consul client to server ports
@@ -76,7 +76,7 @@
     ip: "{{ rule[0] }}"
     port_no: "{{ rule[1] }}"
     proto: "{{ rule[2] }}"
-  when: "'manager' not in group_names"
+  when: "'manager' in group_names"
 
 - community.general.ufw:
     from_ip: "{{ ip }}"
@@ -249,8 +249,6 @@
     - inventory_hostname == groups['manager'][0]
     - agent_tokens.changed
 
-- import_tasks: nomad_integration.yml
-
 - ansible.builtin.template:
     dest: /etc/consul.d/token.hcl
     group: consul
@@ -261,6 +259,18 @@
     trim_blocks: true
   name: Configure Consul token
   register: consul_config_token
+
+- ansible.builtin.systemd_service:
+    daemon_reload: true
+    name: consul
+    state: restarted
+  name: Restart Consul if configuration or tokens has been changed
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      consul_config.changed
+      or consul_config_token.changed
+      or certificates_updated
 
 - ansible.builtin.systemd_service:
     daemon_reload: true
@@ -303,6 +313,8 @@
   name: Set Consul environment variables in .bashrc
   register: bashrc_nomad_vars
   when: "'manager' in group_names"
+
+- import_tasks: nomad_integration.yml
 
 - ansible.builtin.reboot:
   name: Reboot the server and wait for it to come back
