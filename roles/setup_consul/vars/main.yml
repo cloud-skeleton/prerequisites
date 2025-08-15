@@ -11,6 +11,10 @@ consul_client_to_server_ports:
 consul_server_admin_ports:
   - 8501/tcp
 
+consul_server_to_client_ports:
+  - 8301/tcp
+  - 8301/udp
+
 consul_server_to_server_ports:
   - 8300/tcp
   - 8301/tcp
