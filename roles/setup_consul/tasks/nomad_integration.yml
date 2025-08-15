@@ -27,11 +27,12 @@
       -description "Allow agent read access"
       -name allow-agent-read
       -rules @/etc/consul.d/policies/allow-agent-read.hcl
-  # environment:
-  #   NOMAD_ADDR: https://localhost:4646
-  #   NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
-  #   NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-  #   NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
   name: Create the "allow-agent-read" ACL policy
   when:
     - inventory_hostname == groups['manager'][0]
@@ -56,66 +57,28 @@
       -description "Allow service write access"
       -name allow-service-write
       -rules @/etc/consul.d/policies/allow-service-write.hcl
-  # environment:
-  #   NOMAD_ADDR: https://localhost:4646
-  #   NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
-  #   NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
-  #   NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
   name: Create the "allow-service-write" ACL policy
   when:
     - inventory_hostname == groups['manager'][0]
     - allow_service_write_policy.changed
 
-# - ansible.builtin.copy:
-#     content: |
-#       node_prefix "" {
-#         policy = "write"
-#       }
-#     dest: /etc/consul.d/policies/allow-node-write.hcl
-#     group: consul
-#     mode: '0750'
-#     owner: consul
-#   name: Write out the "allow-node-write" policy HCL
-#   register: allow_node_write_policy
-#   when: "'manager' in group_names"
-
-# - ansible.builtin.copy:
-#     content: |
-#       session_prefix "" {
-#         policy = "write"
-#       }
-#     dest: /etc/consul.d/policies/allow-session-write.hcl
-#     group: consul
-#     mode: '0750'
-#     owner: consul
-#   name: Write out the "allow-session-write" policy HCL
-#   register: allow_session_write_policy
-#   when: "'manager' in group_names"
-
-# - ansible.builtin.copy:
-#     content: |
-#       key_prefix "" {
-#         policy = "write"
-#       }
-#     dest: /etc/consul.d/policies/allow-key-write.hcl
-#     group: consul
-#     mode: '0750'
-#     owner: consul
-#   name: Write out the "allow-key-write" policy HCL
-#   register: allow_key_write_policy
-#   when: "'manager' in group_names"
-
-
 - community.general.consul_token:
-    # ca_path: "{{ certificate_files.ca_certificate }}"
+    ca_path: "{{ certificate_files.ca_certificate }}"
     description: Nomad agent token
     local: false
     node_identities: []
     policies:
       - name: allow-agent-read
       - name: allow-service-write
+    port: 8501
     roles: []
-    # scheme: https
+    scheme: https
     service_identities: []
     token: "{{ consul_bootstrap_token }}"
   name: Create scoped Nomad "agent" token
@@ -136,6 +99,11 @@
 
 - ansible.builtin.blockinfile:
     block: |
+      export CONSUL_CACERT={{ hostvars[groups['manager'][0]].certificate_files.ca_certificate }}
+      export CONSUL_CLIENT_CERT={{ hostvars[groups['manager'][0]].certificate_files.cli_certificate }}
+      export CONSUL_CLIENT_KEY={{ hostvars[groups['manager'][0]].certificate_files.cli_private_key }}
+      export CONSUL_HTTP_ADDR=https://localhost:8501
+      export CONSUL_HTTP_SSL=true
       CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_agent_token }}
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     marker: "# {mark} CONSUL"

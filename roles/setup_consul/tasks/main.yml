@@ -191,11 +191,12 @@
     - inventory_hostname == groups['manager'][0]
     - >
       consul_config.changed
-    # or certificates_updated
+      or certificates_updated
 
 - community.general.consul_acl_bootstrap:
-    # ca_path: "{{ certificate_files.ca_certificate }}"
-    # scheme: https
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    port: 8501
+    scheme: https
   name: Create Consul ACL boostrap token
   register: bootstrap_token
   when:
@@ -211,15 +212,16 @@
     - bootstrap_token.changed
 
 - community.general.consul_token:
-    # ca_path: "{{ certificate_files.ca_certificate }}"
+    ca_path: "{{ certificate_files.ca_certificate }}"
     description: "{{ item }} agent token"
     local: false
     node_identities:
       - datacenter: "{{ nomad_main_datacenter_name }}"
         node_name: "{{ hostvars[item].inventory_hostname_short }}"
     policies: []
+    port: 8501
     roles: []
-    # scheme: https
+    scheme: https
     service_identities: []
     token: "{{ consul_bootstrap_token }}"
   loop: "{{ groups['all'] }}"
@@ -275,7 +277,7 @@
   when: >
     consul_config.changed
     or consul_config_token.changed
-  #  or certificates_updated
+    or certificates_updated
 
 - ansible.builtin.user:
     append: true
@@ -287,6 +289,11 @@
 
 - ansible.builtin.blockinfile:
     block: |
+      export CONSUL_CACERT={{ hostvars[groups['manager'][0]].certificate_files.ca_certificate }}
+      export CONSUL_CLIENT_CERT={{ hostvars[groups['manager'][0]].certificate_files.cli_certificate }}
+      export CONSUL_CLIENT_KEY={{ hostvars[groups['manager'][0]].certificate_files.cli_private_key }}
+      export CONSUL_HTTP_ADDR=https://localhost:8501
+      export CONSUL_HTTP_SSL=true
       export CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_bootstrap_token }}
     group: "{{ ansible_env.SUDO_USER }}"
     marker: "# {mark} CONSUL ENV VARS"
