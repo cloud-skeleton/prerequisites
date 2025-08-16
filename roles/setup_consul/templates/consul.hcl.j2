@@ -53,6 +53,17 @@ ports = {
 }
 
 primary_datacenter = "{{ nomad_main_datacenter_name }}"
+
+{% if 'manager' in group_names %}
+raft_logstore = {
+  backend = "wal"
+  verification = {
+    enabled = true
+    interval = "5m"
+  }
+}
+{% endif %}
+
 rejoin_after_leave = true
 
 retry_join = [
