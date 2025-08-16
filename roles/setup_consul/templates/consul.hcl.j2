@@ -77,6 +77,10 @@ retry_join = [
 server = true
 {% endif %}
 
+// @TODO: for the future
+// telemetry = {
+// }
+
 tls = {
   defaults = {
     ca_file = "{{ certificate_files.ca_certificate }}"
@@ -96,5 +100,16 @@ translate_wan_addrs = true //@TODO ???
 {% if 'manager' in group_names %}
 ui_config {
   enabled = true
+  //@TODO ???
+  // dashboard_url_templates = {}
+  // metrics_provider = "prometheus"
+  // metrics_proxy = {
+  //   base_url = "http://prometheus-server"
+  //   path_allowlist = [
+  //     "/api/v1/query_range",
+  //     "/api/v1/query"
+  //   ]
+  //   add_headers = []
+  // }
 }
 {% endif %}

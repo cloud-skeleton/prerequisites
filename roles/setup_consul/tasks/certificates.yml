@@ -2,16 +2,9 @@
 - ansible.builtin.set_fact:
     certificate_request:
       common_name: "{{ certificate.common_name | default('Cloud Skeleton CA', true) }}"
-      # country: "{{ certificate.country | default('EU', true) }}"
       days: "{{ certificate.days | default(365, true) }}"
       days_ca: "{{ certificate.days_ca | default(3650, true) }}"
       domain_name: "{{ certificate.domain_name | default(first_manager.split('.')[1:] | join('.'), true) }}"
-      # locality: "{{ certificate.locality | default('Brussels', true) }}"
-      # organization: "{{ certificate.organization | default('Cloud Skeleton', true) }}"
-      # organizational_unit: "{{ certificate.organizational_unit | default('consul Cluster', true) }}"
-      # postal_code: "{{ certificate.postal_code | default(1049, true) }}"
-      # province: "{{ certificate.province | default('Brussels', true) }}"
-      # street_address: "{{ certificate.street_address | default('Rue de la Loi 200', true) }}"
   name: Set certificate request information
 
 - ansible.builtin.set_fact:
