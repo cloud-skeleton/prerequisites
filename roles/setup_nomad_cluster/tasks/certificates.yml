@@ -1,17 +1,10 @@
 ---
 - ansible.builtin.set_fact:
     certificate_request:
-      common_name: "{{ certificate.common_name | default('Cloud Skeleton CA', true) }}"
-      country: "{{ certificate.country | default('EU', true) }}"
+      common_name: "{{ certificate.common_name | default('Cloud Skeleton / Nomad', true) }}"
       days: "{{ certificate.days | default(365, true) }}"
       days_ca: "{{ certificate.days_ca | default(3650, true) }}"
       domain_name: "{{ certificate.domain_name | default(first_manager.split('.')[1:] | join('.'), true) }}"
-      locality: "{{ certificate.locality | default('Brussels', true) }}"
-      organization: "{{ certificate.organization | default('Cloud Skeleton', true) }}"
-      organizational_unit: "{{ certificate.organizational_unit | default('Nomad Cluster', true) }}"
-      postal_code: "{{ certificate.postal_code | default(1049, true) }}"
-      province: "{{ certificate.province | default('Brussels', true) }}"
-      street_address: "{{ certificate.street_address | default('Rue de la Loi 200', true) }}"
   name: Set certificate request information
 
 - ansible.builtin.set_fact:
@@ -55,14 +48,7 @@
       cmd: >
         nomad tls ca create
           -common-name "{{ certificate_request.common_name }}"
-          -country "{{ certificate_request.country }}"
           -days {{ certificate_request.days_ca }}
-          -locality "{{ certificate_request.locality }}"
-          -organization "{{ certificate_request.organization }}"
-          -organizational-unit "{{ certificate_request.organizational_unit }}"
-          -postal-code "{{ certificate_request.postal_code }}"
-          -province "{{ certificate_request.province }}"
-          -street-address "{{ certificate_request.street_address }}"
     args:
       chdir: /etc/nomad.d/certs
     name: Generate Nomad CA's private key and certificate

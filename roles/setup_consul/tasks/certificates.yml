@@ -1,7 +1,7 @@
 ---
 - ansible.builtin.set_fact:
     certificate_request:
-      common_name: "{{ certificate.common_name | default('Cloud Skeleton CA', true) }}"
+      common_name: "{{ certificate.common_name | default('Cloud Skeleton / Consul', true) }}"
       days: "{{ certificate.days | default(365, true) }}"
       days_ca: "{{ certificate.days_ca | default(3650, true) }}"
       domain_name: "{{ certificate.domain_name | default(first_manager.split('.')[1:] | join('.'), true) }}"
