@@ -21,6 +21,18 @@ disable_remote_exec = true //@TODO ???
 disable_update_check = true
 discard_check_output = true //@TODO ???
 discovery_max_stale = "87600h" //@TODO ???
+
+dns_config = {
+  cache_max_age = "5s"
+  enable_truncate = true
+  node_ttl = "5m"
+  only_passing = true
+  service_ttl = {
+    "*" = "5s"
+  }
+  use_cache = true
+}
+
 enable_agent_tls_for_checks = false //@TODO ???
 enable_local_script_checks = true
 encrypt = "{{ hostvars[groups['manager'][0]]['consul_encryption_string'] }}"
