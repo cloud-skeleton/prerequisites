@@ -1,0 +1,7 @@
+consul {
+    address = "127.0.0.1:8501"
+    ca_file = "{{ certificate_files.ca_certificate }}"
+    cert_file = "{{ certificate_files.client_certificate }}"
+    key_file = "{{ certificate_files.client_private_key }}"
+    ssl = true
+}

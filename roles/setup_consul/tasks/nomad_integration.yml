@@ -97,13 +97,19 @@
     - inventory_hostname == groups['manager'][0]
     - nomad_agent_token.changed
 
+- ansible.builtin.template:
+    dest: /etc/nomad.d/nomad-consul.hcl
+    group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    lstrip_blocks: true
+    mode: '0640'
+    owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
+    src: nomad-consul.hcl.j2
+    trim_blocks: true
+  name: Configure Nomad Consul
+  register: nomad_config_consul
+
 - ansible.builtin.blockinfile:
     block: |
-      CONSUL_CACERT={{ hostvars[groups['manager'][0]].certificate_files.ca_certificate }}
-      CONSUL_CLIENT_CERT={{ hostvars[groups['manager'][0]].certificate_files.cli_certificate }}
-      CONSUL_CLIENT_KEY={{ hostvars[groups['manager'][0]].certificate_files.cli_private_key }}
-      CONSUL_HTTP_ADDR=localhost:8501
-      CONSUL_HTTP_SSL=true
       CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_agent_token }}
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     marker: "# {mark} CONSUL"
@@ -127,5 +133,6 @@
   name: Restart Nomad if configuration has been changed
   when: >
     nomad_env_file.changed
+    or nomad_config_consul.changed
     or nomad_user_group.changed
 ...

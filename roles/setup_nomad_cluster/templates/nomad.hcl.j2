@@ -48,11 +48,6 @@ client {
 }
 {% endif %}
 
-// @TODO: Once consul is installed check this stanza
-// https://developer.hashicorp.com/nomad/docs/configuration/consul
-// consul {
-// }
-
 data_dir  = "/opt/nomad/data"
 datacenter = "{{ nomad_main_datacenter_name }}"
 disable_anonymous_signature = true
