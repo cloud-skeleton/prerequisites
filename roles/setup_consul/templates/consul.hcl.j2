@@ -11,16 +11,13 @@ bind_addr = "{{ ansible_default_ipv4.address }}"
 
 {% if 'manager' in group_names %}
 bootstrap_expect = {{ groups['manager'] | length }}
-client_addr = "0.0.0.0"
 {% endif %}
 
-datacenter = "{{ nomad_main_datacenter_name }}"
+client_addr = "0.0.0.0"
 data_dir = "/opt/consul"
+datacenter = "{{ nomad_main_datacenter_name }}"
 disable_anonymous_signature = true
-disable_remote_exec = true //@TODO ???
 disable_update_check = true
-discard_check_output = true //@TODO ???
-discovery_max_stale = "87600h" //@TODO ???
 
 dns_config = {
   cache_max_age = "5s"
@@ -33,17 +30,18 @@ dns_config = {
   use_cache = true
 }
 
-enable_agent_tls_for_checks = false //@TODO ???
+enable_agent_tls_for_checks = true
 enable_local_script_checks = true
 encrypt = "{{ hostvars[groups['manager'][0]]['consul_encryption_string'] }}"
-node_name = "{{ inventory_hostname_short }}"
 
 node_meta = {
   node_class = "{{ group_names[0] | replace('_','-') }}"
 }
 
+node_name = "{{ inventory_hostname_short }}"
+
 performance = {
-  enable_xds_load_balancing = true //@TODO ???
+  enable_xds_load_balancing = true
   raft_multiplier = 1
 }
 
@@ -54,7 +52,6 @@ ports = {
 
 primary_datacenter = "{{ nomad_main_datacenter_name }}"
 
-{% if 'manager' in group_names %}
 raft_logstore = {
   backend = "wal"
   verification = {
@@ -62,7 +59,6 @@ raft_logstore = {
     interval = "5m"
   }
 }
-{% endif %}
 
 rejoin_after_leave = true
 
@@ -94,8 +90,6 @@ tls = {
     verify_incoming = false
   }
 }
-
-translate_wan_addrs = true //@TODO ???
 
 {% if 'manager' in group_names %}
 ui_config {
