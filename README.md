@@ -26,16 +26,16 @@ graph LR
   admin["<b>Admin</b><br>🤝 Trusted Network"]
 
   subgraph "<b>Network</b>"
-    subgraph "<b>Subnet</b> <i>(Public)</i>"
-      ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
-    end
-
     subgraph "<b>Subnet A</b> <i>(Private)</i>"
       manager["<b>Manager Node</b><br>🧐 Swarm Manager"]
     end
 
     subgraph "<b>Subnet B</b> <i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
+    end
+
+    subgraph "<b>Subnet C</b> <i>(Public)</i>"
+      ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
     end
   end
 
