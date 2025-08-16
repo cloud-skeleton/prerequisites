@@ -38,6 +38,10 @@ enable_local_script_checks = true
 encrypt = "{{ hostvars[groups['manager'][0]]['consul_encryption_string'] }}"
 node_name = "{{ inventory_hostname_short }}"
 
+node_meta = {
+  node_class = "{{ group_names[0] | replace('_','-') }}"
+}
+
 performance = {
   enable_xds_load_balancing = true //@TODO ???
   raft_multiplier = 1
@@ -49,6 +53,7 @@ ports = {
 }
 
 primary_datacenter = "{{ nomad_main_datacenter_name }}"
+rejoin_after_leave = true
 
 retry_join = [
   {% for host in groups['manager'] %}
