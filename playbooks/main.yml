@@ -11,5 +11,4 @@
     - setup_docker
     - setup_nomad_cluster
     - setup_consul
-    # - setup_volume
 ...

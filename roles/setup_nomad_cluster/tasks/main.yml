@@ -437,6 +437,18 @@
     or client_nomad_env_file.changed
     or cni_config.changed
 
+- ansible.builtin.command:
+    cmd: nomad namespace apply -description "System resources" system
+  changed_when: false
+  environment:
+    NOMAD_ADDR: https://localhost:4646
+    NOMAD_CACERT: "{{ certificate_files.ca_certificate }}"
+    NOMAD_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    NOMAD_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    NOMAD_TOKEN: "{{ nomad_server_token }}"
+  name: Create Nomad "system" namespace
+  when: inventory_hostname == groups['manager'][0]
+
 - ansible.builtin.user:
     append: true
     groups: nomad
