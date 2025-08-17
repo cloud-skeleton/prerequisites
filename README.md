@@ -27,7 +27,7 @@ graph LR
 
   subgraph "<b>Network</b>"
     subgraph "<b>Subnet A</b> <i>(Private)</i>"
-      manager["<b>Manager Node</b><br>🧐 Swarm Manager"]
+      manager["<b>Manager Node</b><br>🧐 Cluster Server"]
     end
 
     subgraph "<b>Subnet B</b> <i>(Private)</i>"
