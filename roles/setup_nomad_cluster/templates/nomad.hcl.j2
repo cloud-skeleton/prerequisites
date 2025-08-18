@@ -57,7 +57,7 @@ enable_syslog = true
 leave_on_interrupt = true
 {% endif %}
 
-{% if 'main_worker' in group_names %}
+{% if 'manager' not in group_names %}
 plugin "docker" {
   config {
     allow_privileged = true
