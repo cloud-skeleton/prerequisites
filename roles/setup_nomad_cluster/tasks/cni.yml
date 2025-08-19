@@ -71,4 +71,15 @@
     trim_blocks: true
   name: Configure CNI plugin
   register: cni_config
+
+- community.general.ufw:
+    log: true
+    proto: "{{ item }}"
+    route: true
+    rule: allow
+    to_ip: "{{ nomad_cluster_bridge_network_cidr }}"
+  loop:
+    - tcp
+    - udp
+  name: Allow CNI bridge network
 ...
