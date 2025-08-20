@@ -3,12 +3,12 @@
   hosts: all
   name: Initialize Nomad cluster and all prerequisites
   roles:
-    # - disable_pam_systemd
-    # - configure_dns
-    # - set_hostname
-    # - upgrade_system
-    # - setup_firewall
-    # - setup_docker
+    - disable_pam_systemd
+    - configure_dns
+    - set_hostname
+    - upgrade_system
+    - setup_firewall
+    - setup_docker
     - setup_nomad_cluster
-    # - setup_consul
+    - setup_consul
 ...
