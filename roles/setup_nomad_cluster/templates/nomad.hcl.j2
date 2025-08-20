@@ -14,10 +14,6 @@ client {
   // bridge_network_hairpin_mode = true
   bridge_network_subnet = "{{ nomad_cluster_bridge_network_cidr }}"
 
-  drain_on_shutdown {
-    deadline = "{{ nomad_client_drain_max_time }}"
-  }
-
   enabled = true
   node_class = "{{ group_names[0] | replace('_','-') }}"
   max_kill_timeout = "1m"
@@ -53,9 +49,6 @@ datacenter = "{{ nomad_main_datacenter_name }}"
 disable_anonymous_signature = true
 disable_update_check = true
 enable_syslog = true
-{% if 'manager' not in group_names %}
-leave_on_interrupt = true
-{% endif %}
 
 {% if 'manager' not in group_names %}
 plugin "docker" {

@@ -399,12 +399,6 @@
 - ansible.builtin.blockinfile:
     block: |
       NOMAD_TOKEN={{ hostvars[groups['manager'][0]]['nomad_client_token'] }}
-
-      # Required for `ExecStartPost=/usr/bin/nomad node eligibility -self -enable`
-      NOMAD_ADDR=https://localhost:4646
-      NOMAD_CACERT={{ certificate_files.ca_certificate }}
-      NOMAD_CLIENT_CERT={{ certificate_files.client_certificate }}
-      NOMAD_CLIENT_KEY={{ certificate_files.client_private_key }}
     group: root
     marker: "# {mark} NOMAD"
     mode: '0640'

@@ -4,8 +4,6 @@ ingress_worker_ports:
   - 443/tcp
   - 443/udp
 
-nomad_client_drain_max_time: 10m
-
 nomad_client_to_server_ports:
   - 4646/tcp
   - 4647/tcp
