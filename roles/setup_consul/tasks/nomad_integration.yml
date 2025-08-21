@@ -40,6 +40,36 @@
 
 - ansible.builtin.copy:
     content: |
+      node_prefix  "" {
+        policy = "write"
+      }
+    dest: /etc/consul.d/policies/allow-node-write.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-node-write" policy HCL
+  register: allow_node_write_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow node write access"
+      -name allow-node-write
+      -rules @/etc/consul.d/policies/allow-node-write.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-node-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_node_write_policy.changed
+
+- ansible.builtin.copy:
+    content: |
       service_prefix "" {
         policy = "write"
       }
@@ -68,34 +98,127 @@
     - inventory_hostname == groups['manager'][0]
     - allow_service_write_policy.changed
 
+- ansible.builtin.copy:
+    content: |
+      acl  = "write"
+    dest: /etc/consul.d/policies/allow-acl-write.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-acl-write" policy HCL
+  register: allow_acl_write_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow ACL write access"
+      -name allow-acl-write
+      -rules @/etc/consul.d/policies/allow-acl-write.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-acl-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_acl_write_policy.changed
+
+- ansible.builtin.copy:
+    content: |
+      mesh = "write"
+    dest: /etc/consul.d/policies/allow-mesh-write.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-mesh-write" policy HCL
+  register: allow_mesh_write_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow mesh write access"
+      -name allow-mesh-write
+      -rules @/etc/consul.d/policies/allow-mesh-write.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-mesh-write" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_mesh_write_policy.changed
+
 - community.general.consul_token:
     ca_path: "{{ certificate_files.ca_certificate }}"
-    description: Nomad agent token
+    description: Nomad server agent token
     local: false
     node_identities: []
     policies:
       - name: allow-agent-read
+      - name: allow-node-write
+      - name: allow-service-write
+      - name: allow-acl-write
+      - name: allow-mesh-write
+    port: 8501
+    roles: []
+    scheme: https
+    service_identities: []
+    token: "{{ consul_bootstrap_token }}"
+  name: Create scoped Nomad server agent token
+  register: nomad_server_agent_token
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      allow_agent_read_policy.changed
+      or allow_node_write_policy.changed
+      or allow_service_write_policy.changed
+      or allow_acl_write_policy.changed
+      or allow_mesh_write_policy.changed
+
+- ansible.builtin.set_fact:
+    cacheable: true
+    consul_nomad_server_agent_token: "{{ nomad_server_agent_token.token.SecretID }}"
+  name: Cache the new Nomad server agent token indefinitely
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - nomad_server_agent_token.changed
+
+- community.general.consul_token:
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    description: Nomad client agent token
+    local: false
+    node_identities: []
+    policies:
+      - name: allow-agent-read
+      - name: allow-node-write
       - name: allow-service-write
     port: 8501
     roles: []
     scheme: https
     service_identities: []
     token: "{{ consul_bootstrap_token }}"
-  name: Create scoped Nomad "agent" token
-  register: nomad_agent_token
+  name: Create scoped Nomad client agent token
+  register: nomad_client_agent_token
   when:
     - inventory_hostname == groups['manager'][0]
     - >
       allow_agent_read_policy.changed
+      or allow_node_write_policy.changed
       or allow_service_write_policy.changed
 
 - ansible.builtin.set_fact:
     cacheable: true
-    consul_nomad_agent_token: "{{ nomad_agent_token.token.SecretID }}"
-  name: Cache the new Nomad agent token indefinitely
+    consul_nomad_client_agent_token: "{{ nomad_client_agent_token.token.SecretID }}"
+  name: Cache the new Nomad client agent token indefinitely
   when:
     - inventory_hostname == groups['manager'][0]
-    - nomad_agent_token.changed
+    - nomad_client_agent_token.changed
 
 - ansible.builtin.template:
     dest: /etc/nomad.d/nomad-consul.hcl
@@ -110,7 +233,11 @@
 
 - ansible.builtin.blockinfile:
     block: |
-      CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_agent_token }}
+      {% if 'manager' in group_names %}
+      CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_server_agent_token }}
+      {% else %}
+      CONSUL_HTTP_TOKEN={{ hostvars[groups['manager'][0]].consul_nomad_client_agent_token }}
+      {% endif %}
     group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
     marker: "# {mark} CONSUL"
     mode: '0640'
