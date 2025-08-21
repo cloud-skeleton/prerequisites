@@ -10,8 +10,7 @@ client {
     http_max_size = "5G"
   }
 
-  // @TODO: Not yet sure if needed
-  // bridge_network_hairpin_mode = true
+  bridge_network_hairpin_mode = true
   bridge_network_subnet = "{{ nomad_cluster_bridge_network_cidr }}"
 
   enabled = true
