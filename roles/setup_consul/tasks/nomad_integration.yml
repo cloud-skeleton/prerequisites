@@ -262,4 +262,172 @@
     nomad_env_file.changed
     or nomad_config_consul.changed
     or nomad_user_group.changed
+
+- ansible.builtin.slurp:
+    src: /etc/nomad.d/certs/nomad-agent-ca.pem
+  name: Read remote nomad-agent-ca.pem into a variable
+  register: nomad_agent_ca_file
+  when: inventory_hostname == groups['manager'][0]
+
+- community.general.consul_auth_method:
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    config:
+      bound_audiences: ["cloudskeleton.eu"]
+      claim_mappings:
+        consul_namespace: consul_namespace
+        nomad_job_id: nomad_job_id
+        nomad_namespace: nomad_namespace
+        nomad_service: nomad_service
+        nomad_task: nomad_task
+      jwks_ca_cert: "{{ nomad_agent_ca_file.content | b64decode }}"
+      jwks_url: "https://127.0.0.1:4646/.well-known/jwks.json"
+    description: JWT auth method for Nomad services and tasks
+    name: nomad-workloads
+    port: 8501
+    scheme: https
+    token: "{{ consul_bootstrap_token }}"
+    token_locality: global
+    type: jwt
+  name: Create Consul JWT auth method for Nomad workloads
+  when: inventory_hostname == groups['manager'][0]
+
+- community.general.consul_binding_rule:
+    auth_method: nomad-workloads
+    bind_name: '${value.nomad_service}'
+    bind_type: service
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    description: Binding rule for services registered from Nomad
+    name: nomad-services
+    port: 8501
+    scheme: https
+    selector: '"nomad_service" in value'
+    token: "{{ consul_bootstrap_token }}"
+  name: Create binding rule for services registered from Nomad
+  when: inventory_hostname == groups['manager'][0]
+
+- community.general.consul_binding_rule:
+    auth_method: nomad-workloads
+    bind_name: nomad-tasks
+    bind_type: role
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    description: Binding rule for Nomad tasks
+    name: nomad-tasks
+    port: 8501
+    scheme: https
+    selector: '"nomad_service" not in value'
+    token: "{{ consul_bootstrap_token }}"
+  name: Create binding rule for Nomad tasks
+  when: inventory_hostname == groups['manager'][0]
+
+- ansible.builtin.copy:
+    content: |
+      node_prefix  "" {
+        policy = "read"
+      }
+    dest: /etc/consul.d/policies/allow-node-read.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-node-read" policy HCL
+  register: allow_node_read_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow node read access"
+      -name allow-node-read
+      -rules @/etc/consul.d/policies/allow-node-read.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-node-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_node_read_policy.changed
+
+- ansible.builtin.copy:
+    content: |
+      service_prefix "" {
+        policy = "read"
+      }
+    dest: /etc/consul.d/policies/allow-service-read.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-service-read" policy HCL
+  register: allow_service_read_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow service read access"
+      -name allow-service-read
+      -rules @/etc/consul.d/policies/allow-service-read.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-service-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_service_read_policy.changed
+
+- ansible.builtin.copy:
+    content: |
+      key_prefix "" {
+        policy = "read"
+      }
+    dest: /etc/consul.d/policies/allow-key-read.hcl
+    group: consul
+    mode: '0750'
+    owner: consul
+  name: Write out the "allow-key-read" policy HCL
+  register: allow_key_read_policy
+  when: "'manager' in group_names"
+
+- ansible.builtin.command:
+    cmd: >
+      consul acl policy create -token {{ consul_bootstrap_token }}
+      -description "Allow key read access"
+      -name allow-key-read
+      -rules @/etc/consul.d/policies/allow-key-read.hcl
+  environment:
+    CONSUL_CACERT: "{{ certificate_files.ca_certificate }}"
+    CONSUL_CLIENT_CERT: "{{ certificate_files.cli_certificate }}"
+    CONSUL_CLIENT_KEY: "{{ certificate_files.cli_private_key }}"
+    CONSUL_HTTP_ADDR: https://localhost:8501
+    CONSUL_HTTP_SSL: "true"
+  name: Create the "allow-key-read" ACL policy
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - allow_key_read_policy.changed
+
+- community.general.consul_role:
+    ca_path: "{{ certificate_files.ca_certificate }}"
+    description: ACL role for Nomad tasks
+    name: nomad-tasks
+    node_identities: []
+    policies:
+      - name: allow-key-read
+      - name: allow-node-read
+      - name: allow-service-read
+    port: 8501
+    scheme: https
+    service_identities: []
+    token: "{{ consul_bootstrap_token }}"
+  name: Create Nomad tasks role
+  register: nomad_tasks_role
+  when:
+    - inventory_hostname == groups['manager'][0]
+    - >
+      allow_key_read_policy.changed
+      or allow_node_read_policy.changed
+      or allow_service_read_policy.changed
 ...

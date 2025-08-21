@@ -3,5 +3,16 @@ consul {
     ca_file = "{{ certificate_files.ca_certificate }}"
     cert_file = "{{ certificate_files.client_certificate }}"
     key_file = "{{ certificate_files.client_private_key }}"
+
+    service_identity {
+        aud = ["cloudskeleton.eu"]
+        ttl = "1h"
+    }
+
     ssl = true
+
+    task_identity {
+        aud = ["cloudskeleton.eu"]
+        ttl = "1h"
+    }
 }
