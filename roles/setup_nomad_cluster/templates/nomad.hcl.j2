@@ -6,16 +6,15 @@ acl {
 client {
   artifact {
     decompression_file_count_limit = 10000
-    decompression_size_limit = "10G"
-    http_max_size = "5G"
+    decompression_size_limit       = "10G"
+    http_max_size                  = "5G"
   }
 
   bridge_network_hairpin_mode = true
-  bridge_network_subnet = "{{ nomad_cluster_bridge_network_cidr }}"
-
-  enabled = true
-  node_class = "{{ group_names[0] | replace('_','-') }}"
-  max_kill_timeout = "1m"
+  bridge_network_subnet       = "{{ nomad_cluster_bridge_network_cidr }}"
+  enabled                     = true
+  node_class                  = "{{ group_names[0] | replace('_','-') }}"
+  max_kill_timeout            = "1m"
 
   meta {
     eu.cloudskeleton.node = true
@@ -26,9 +25,9 @@ client {
   }
 
   reserved {
-    cpu = 400
-    disk = 4096
-    memory = 512
+    cpu            = 400
+    disk           = 4096
+    memory         = 512
     reserved_ports = "22"
   }
 
@@ -43,11 +42,11 @@ client {
 }
 {% endif %}
 
-data_dir  = "/opt/nomad/data"
-datacenter = "{{ nomad_main_datacenter_name }}"
+data_dir                    = "/opt/nomad/data"
+datacenter                  = "{{ nomad_main_datacenter_name }}"
 disable_anonymous_signature = true
-disable_update_check = true
-enable_syslog = true
+disable_update_check        = true
+enable_syslog               = true
 
 {% if 'manager' not in group_names %}
 plugin "docker" {
@@ -64,11 +63,8 @@ plugin "docker" {
 {% if 'manager' in group_names %}
 server {
   bootstrap_expect = {{ groups['manager'] | length }}
-  enabled = true
-  encrypt = "{{ hostvars[groups['manager'][0]]['nomad_encryption_string'] }}"
-  // @TODO: investigate later
-  // https://developer.hashicorp.com/nomad/docs/configuration/server#oidc_issuer
-  // oidc_issuer = ""
+  enabled          = true
+  encrypt          = "{{ hostvars[groups['manager'][0]]['nomad_encryption_string'] }}"
 
   plan_rejection_tracker {
     enabled = true
@@ -93,16 +89,11 @@ telemetry {
 {% endif %}
 
 tls {
-  ca_file = "{{ certificate_files.ca_certificate }}"
-  cert_file = "{{ certificate_files.server_certificate if 'manager' in group_names else certificate_files.client_certificate }}"
-  http = true
-  key_file = "{{ certificate_files.server_private_key if 'manager' in group_names else certificate_files.client_private_key }}"
-  rpc = true
-  verify_https_client = {{ enable_cluster_management_mtls }}
+  ca_file                = "{{ certificate_files.ca_certificate }}"
+  cert_file              = "{{ certificate_files.server_certificate if 'manager' in group_names else certificate_files.client_certificate }}"
+  http                   = true
+  key_file               = "{{ certificate_files.server_private_key if 'manager' in group_names else certificate_files.client_private_key }}"
+  rpc                    = true
+  verify_https_client    = {{ enable_cluster_management_mtls }}
   verify_server_hostname = true
 }
-
-// @TODO: Once vault is installed check this stanza
-// https://developer.hashicorp.com/nomad/docs/configuration/vault
-// vault {
-// }
