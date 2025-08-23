@@ -35,11 +35,18 @@ def _is_var(path: str) -> bool:
     except URLNotFoundNomadException:
         return False
 
-def _set_var(path: str, data: dict[str, str], index: int = 0) -> tuple[int, dict[str, str]]:
+def _set_var(path: str, data: dict[str, str], index: int | None = None) -> tuple[int, dict[str, str]]:
     var: dict[str, Any] = nomad.variable.create_variable(path, {"Items": data}, "system", index)
     return var["ModifyIndex"], var["Items"]
 
 def _process_event(event: dict[str, Any]) -> None:
+    last_event_var_index: int = 0
+    last_event_value: int = 0
+    if _is_var(LAST_EVENT_VAR_PATH):
+        last_event_var_index, last_event_var_value = _get_var(LAST_EVENT_VAR_PATH)
+        last_event_value = int(last_event_var_value["LAST_EVENT"])
+    if event["Index"] <= last_event_value:
+        return
     job: dict[str, Any] = event["Events"][0]["Payload"]["Job"]
     data: dict[str, Any] = {
         "event": event["Events"][0]["Type"],
@@ -57,6 +64,7 @@ def _process_event(event: dict[str, Any]) -> None:
         }
     }
     print(dumps(data, indent = 4))
+    _set_var(LAST_EVENT_VAR_PATH, {"LAST_EVENT": str(event["Index"])}, last_event_var_index)
 
 def lock() -> None:
     if _is_var(LOCK_VAR_PATH):
@@ -64,7 +72,7 @@ def lock() -> None:
         print(f"Current lock has been found! {lock_index} -> {lock_value['OWNER']}")
         return
     try:
-        lock_index, lock_value = _set_var(LOCK_VAR_PATH, {'OWNER': getfqdn()})
+        lock_index, lock_value = _set_var(LOCK_VAR_PATH, {'OWNER': getfqdn()}, 0)
         print(f"NEW lock has been set! {lock_index} -> {lock_value['OWNER']}")
     except VariableConflict:
         lock_index, lock_value = _get_var(LOCK_VAR_PATH)
