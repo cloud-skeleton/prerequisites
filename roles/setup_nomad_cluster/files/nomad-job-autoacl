@@ -18,18 +18,26 @@ LAST_EVENT_VAR_PATH: str = "system/scripts/nomad-job-autoacl/last_event"
 
 nomad: Nomad = Nomad()
 
+def _is_owner(lock_value: dict[str, str]) -> bool:
+    return lock_value['OWNER'] == getfqdn()
+
 def _get_var(path: str) -> tuple[int, dict[str, str]]:
     var: dict[str, Any] = nomad.variable.get_variable(path, "system")
     return var["ModifyIndex"], var["Items"]
 
+def _delete_var(path: str, index: int | None = None) -> None:
+    nomad.variable.delete_variable(path, "system", index)
+
+def _is_var(path: str) -> bool:
+    try:
+        _get_var(path)
+        return True
+    except URLNotFoundNomadException:
+        return False
+
 def _set_var(path: str, data: dict[str, str], index: int = 0) -> tuple[int, dict[str, str]]:
     var: dict[str, Any] = nomad.variable.create_variable(path, {"Items": data}, "system", index)
     return var["ModifyIndex"], var["Items"]
-
-def _delete_var(path: str) -> tuple[int, dict[str, str]]:
-    index, value = _get_var(path)
-    nomad.variable.delete_variable(path, "system", index)
-    return index, value
 
 def _process_event(event: dict[str, Any]) -> None:
     job: dict[str, Any] = event["Events"][0]["Payload"]["Job"]
@@ -51,34 +59,38 @@ def _process_event(event: dict[str, Any]) -> None:
     print(dumps(data, indent = 4))
 
 def lock() -> None:
-    try:
+    if _is_var(LOCK_VAR_PATH):
         lock_index, lock_value = _get_var(LOCK_VAR_PATH)
         print(f"Current lock has been found! {lock_index} -> {lock_value['OWNER']}")
-    except URLNotFoundNomadException:
-        try:
-            lock_index, lock_value = _set_var(LOCK_VAR_PATH, {'OWNER': getfqdn()})
-            print(f"NEW lock has been set! {lock_index} -> {lock_value['OWNER']}")
-        except VariableConflict:
-            lock_index, lock_value = _get_var(LOCK_VAR_PATH)
-            print(f"Current lock has been found! {lock_index} -> {lock_value['OWNER']}")
+        return
+    try:
+        lock_index, lock_value = _set_var(LOCK_VAR_PATH, {'OWNER': getfqdn()})
+        print(f"NEW lock has been set! {lock_index} -> {lock_value['OWNER']}")
+    except VariableConflict:
+        lock_index, lock_value = _get_var(LOCK_VAR_PATH)
+        print(f"Current lock has been found! {lock_index} -> {lock_value['OWNER']}")
 
 def unlock() -> None:
+    if not _is_var(LOCK_VAR_PATH):
+        print("Skipping as lock has been already released!")
+        return
+    lock_index, lock_value = _get_var(LOCK_VAR_PATH)
+    if not _is_owner(lock_value):
+        print("Skipping as lock has been created by another agent!")
+        return
     try:
-        lock_index, lock_value = _delete_var(LOCK_VAR_PATH)
+        _delete_var(LOCK_VAR_PATH, lock_index)
         print(f"Lock has been RELEASED! {lock_index} -> {lock_value['OWNER']}")
     except VariableConflict:
         print("Skipping unlock as variable has been during operation!")
-    except URLNotFoundNomadException:
-        print("Skipping as lock has been already released!")
 
 def start() -> None:
-    try:
-        lock_index, lock_value = _get_var(LOCK_VAR_PATH)
-        if lock_value['OWNER'] != getfqdn():
-            print(f"Stopping as lock of another agent has been found! {lock_index} -> {lock_value['OWNER']}")
-            return
-    except URLNotFoundNomadException:
+    if not _is_var(LOCK_VAR_PATH):
         print("Stopping as no lock has been set!")
+        return
+    lock_index, lock_value = _get_var(LOCK_VAR_PATH)
+    if not _is_owner(lock_value):
+        print(f"Stopping as lock of another agent has been found! {lock_index} -> {lock_value['OWNER']}")
         return
     stream, _, events = cast(
         tuple[Thread, Event, Queue],
