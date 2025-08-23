@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+from warnings import filterwarnings
+from urllib3.exceptions import InsecureRequestWarning
+filterwarnings("ignore", category = InsecureRequestWarning)
+
+from argparse import ArgumentParser, Namespace
+from json import dumps
+from nomad import Nomad
+from nomad.api.exceptions import URLNotFoundNomadException, VariableConflict
+from queue import Queue
+from socket import getfqdn
+from threading import Thread, Event
+from typing import cast, Any, Callable
+
+LOCK_VAR_PATH: str = "system/scripts/nomad-job-autoacl/lock"
+LAST_EVENT_VAR_PATH: str = "system/scripts/nomad-job-autoacl/last_event"
+
+nomad: Nomad = Nomad()
+
+def _get_lock_value() -> tuple[int, str]:
+    lock_var: dict[str, Any] = nomad.variable.get_variable(LOCK_VAR_PATH, "system")
+    return lock_var["ModifyIndex"], lock_var["Items"]["OWNER"]
+
+def _set_lock_value() -> tuple[int, str]:
+    lock_var = nomad.variable.create_variable(LOCK_VAR_PATH, {"Items": {"OWNER": getfqdn()}}, "system", 0)
+    return lock_var["ModifyIndex"], lock_var["Items"]["OWNER"]
+
+def _delete_lock_value() -> tuple[int, str]:
+    lock_index, lock_value = _get_lock_value()
+    nomad.variable.delete_variable(LOCK_VAR_PATH, "system", lock_index)
+    return lock_index, lock_value
+
+def _process_event(event: dict[str, Any]) -> None:
+    job: dict[str, Any] = event["Events"][0]["Payload"]["Job"]
+    data: dict[str, Any] = {
+        "event": event["Events"][0]["Type"],
+        "index": event["Index"],
+        "objects": {
+            job["Namespace"]: {
+                job["Name"]: {
+                    group["Name"]: [
+                        task["Name"]
+                        for task in group["Tasks"]
+                    ]
+                    for group in job["TaskGroups"]
+                }
+            }
+        }
+    }
+    print(dumps(data, indent = 4))
+
+def lock() -> None:
+    try:
+        lock_index, lock_value = _get_lock_value()
+        print(f"Current lock has been found! {lock_index} -> {lock_value}")
+    except URLNotFoundNomadException:
+        try:
+            lock_index, lock_value = _set_lock_value()
+            print(f"NEW lock has been set! {lock_index} -> {lock_value}")
+        except VariableConflict:
+            lock_index, lock_value = _get_lock_value()
+            print(f"Current lock has been found! {lock_index} -> {lock_value}")
+
+def unlock() -> None:
+    try:
+        lock_index, lock_value = _delete_lock_value()
+        print(f"Lock has been RELEASED! {lock_index} -> {lock_value}")
+    except VariableConflict:
+        print("Skipping unlock as variable has been during operation!")
+    except URLNotFoundNomadException:
+        print("Skipping as lock has been already released!")
+
+def start() -> None:
+    try:
+        lock_index, lock_value = _get_lock_value()
+        if lock_value != getfqdn():
+            print(f"Stopping as lock of another agent has been found! {lock_index} -> {lock_value}")
+            return
+    except URLNotFoundNomadException:
+        print("Stopping as no lock has been set!")
+        return
+    stream, _, events = cast(
+        tuple[Thread, Event, Queue],
+        nomad.event.stream.get_stream(
+            namespace = "*",
+            topic = {"Job": "*"}
+        )
+    )
+    stream.start()
+    while True:
+        _process_event(events.get())
+        events.task_done()
+
+if __name__ == "__main__":
+    parser: ArgumentParser = ArgumentParser()
+    parser.add_argument("method", choices = ["start", "lock", "unlock"])
+    arguments: Namespace = parser.parse_args()
+    fn: Callable[[], None] | None = globals().get(arguments.method)
+    if not fn:
+        raise ValueError(f"Unknown function {arguments.method}")
+    fn()
