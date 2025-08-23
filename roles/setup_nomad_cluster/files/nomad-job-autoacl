@@ -39,6 +39,46 @@ def _set_var(path: str, data: dict[str, str], index: int | None = None) -> tuple
     var: dict[str, Any] = nomad.variable.create_variable(path, {"Items": data}, "system", index)
     return var["ModifyIndex"], var["Items"]
 
+def _attach_acl(data: dict[str, Any]) -> None:
+    var_capabilities: dict[str, list[str]] = {
+        "capabilities": ["list", "read"]
+    }
+    policy: dict[str, Any] = {
+        "Name": f"allow-variables-read-{data['job']}".replace("_", "-"),
+        "Description": f"AutoACL: Allow read variables for {data['job']} job",
+        "JobACL": {
+            "Namespace": data["namespace"],
+            "JobID": data['job']
+        },
+        "Rules": dumps({
+            "namespace": {
+                data["namespace"]: {
+                    "policy": "read",
+                    "variables": {
+                        "path": {
+                            f"nomad/jobs/{data['job']}/*": var_capabilities,
+                            **{
+                                f"nomad/jobs/{data['job']}/{group}/*": var_capabilities
+                                for group in data["tasks"]
+                            },
+                            **{
+                                f"nomad/jobs/{data['job']}/{group}/{task}/*": var_capabilities
+                                for group, tasks in data["tasks"].items()
+                                for task in tasks
+                            }
+                        }
+                    }
+                }
+            }
+        }, indent = 4)
+    }
+    print(f"Creating ACL policy for {data['job']} job")
+    nomad.acl.create_policy(f"allow-variables-read-{data['job']}".replace("_", "-"), policy)
+
+def _remove_acl(data: dict[str, Any]) -> None:
+    print(f"Deleting ACL policy for {data['job']} job")
+    nomad.acl.delete_policy(f"allow-variables-read-{data['job']}".replace("_", "-"))
+
 def _process_event(event: dict[str, Any]) -> None:
     last_event_var_index: int = 0
     last_event_value: int = 0
@@ -49,21 +89,20 @@ def _process_event(event: dict[str, Any]) -> None:
         return
     job: dict[str, Any] = event["Events"][0]["Payload"]["Job"]
     data: dict[str, Any] = {
-        "event": event["Events"][0]["Type"],
-        "index": event["Index"],
-        "objects": {
-            job["Namespace"]: {
-                job["Name"]: {
-                    group["Name"]: [
-                        task["Name"]
-                        for task in group["Tasks"]
-                    ]
-                    for group in job["TaskGroups"]
-                }
-            }
+        "namespace": job["Namespace"],
+        "job": job["Name"],
+        "tasks": {
+            group["Name"]: [
+                task["Name"]
+                for task in group["Tasks"]
+            ]
+            for group in job["TaskGroups"]
         }
     }
-    print(dumps(data, indent = 4))
+    if event["Events"][0]["Type"] == "JobRegistered":
+        _attach_acl(data)
+    elif event["Events"][0]["Type"] == "JobDeregistered":
+        _remove_acl(data)
     _set_var(LAST_EVENT_VAR_PATH, {"LAST_EVENT": str(event["Index"])}, last_event_var_index)
 
 def lock() -> None:
