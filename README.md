@@ -41,17 +41,11 @@ graph LR
 
   external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br><b>443 / tcp</b> <i>(HTTPS)</i><br><b>443 / udp</b> <i>(QUIC)</i>"| ingress
 
-  ingress -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i><br><b>8300 / tcp</b> <i>(Consul RPC)</i>"| manager
+  ingress -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i>"| manager
 
-  worker -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i><br><b>8300 / tcp</b> <i>(Consul RPC)</i>"| manager
+  worker -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i>"| manager
 
-  worker <-->|"<b>8301 / tcp</b> <i>(Consul Serf)</i><br><b>8301 / udp</b> <i>(Consul Serf)</i>"| ingress
-
-  worker <-->|"<b>8301 / tcp</b> <i>(Consul Serf)</i><br><b>8301 / udp</b> <i>(Consul Serf)</i>"| manager
-
-  ingress <-->|"<b>8301 / tcp</b> <i>(Consul Serf)</i><br><b>8301 / udp</b> <i>(Consul Serf)</i>"| manager
-
-  admin -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>8501 / tcp</b> <i>(Consul API)</i>"| manager
+  admin -->|"<b>4646 / tcp</b> <i>(Nomad API)</i>"| manager
 ```
 
 ---
