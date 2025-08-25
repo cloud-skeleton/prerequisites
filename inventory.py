@@ -45,6 +45,11 @@ def main() -> None:
             "vars": {
                 "ansible_ssh_private_key_file": get_env("SSH_KEY_FILE_PATH"),
                 "ansible_user": get_env("SSH_USER"),
+                "enable_cluster_management_mtls": get_env("ENABLE_CLUSTER_MANAGEMENT_MTLS"),
+                "nomad_cluster_bridge_network_cidr": get_env("NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR"),
+                "nomad_cluster_volume_nfs_share": get_env("NOMAD_CLUSTER_VOLUME_NFS_SHARE"),
+                "nomad_main_datacenter_name": get_env("NOMAD_MAIN_DATACENTER_NAME"),
+                "nomad_server_http_allow_ip_cidrs": get_hosts("NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS"),
                 "ssh_allow_ip_cidrs": get_hosts("SSH_ALLOW_IP_CIDRS")
             }
         },

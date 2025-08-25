@@ -14,7 +14,7 @@ It is designed to be safe, modular, and self-documenting — perfect for bare-me
 
 To set up a resilient and secure infrastructure, you must provision **at least 3 nodes**:
 
-1. 🧐 **Manager Node** – Orchestrates the **[Docker Swarm][docker-swarm]** cluster.  
+1. 🧐 **Manager Node** – Orchestrates the **[Hashicorp Nomad][hashicorp-nomad]** cluster.  
 2. 🧱 **Main Worker Node** – Runs core application workloads.  
 3. 🌐 **Ingress Worker Node** – Handles **external access**, such as hosting **[Traefik][traefik]** or a similar reverse proxy.
 
@@ -23,27 +23,29 @@ graph LR
 
   external_client["<b>Client</b><br>🌐 Internet"]
 
-  subgraph "<b>Network</b>"
-    subgraph "<b>Subnet</b> <i>(Public)</i>"
-      ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
-    end
+  admin["<b>Admin</b><br>🤝 Trusted Network"]
 
+  subgraph "<b>Network</b>"
     subgraph "<b>Subnet A</b> <i>(Private)</i>"
-      manager["<b>Manager Node</b><br>🧐 Swarm Manager"]
+      manager["<b>Manager Node</b><br>🧐 Cluster Server"]
     end
 
     subgraph "<b>Subnet B</b> <i>(Private)</i>"
       worker["<b>Main Worker Node</b><br>📦 App Workloads"]
     end
+
+    subgraph "<b>Subnet C</b> <i>(Public)</i>"
+      ingress["<b>Ingress Worker Node</b><br>🚪 Public Endpoint"]
+    end
   end
 
   external_client -->|"<b>80 / tcp</b> <i>(HTTP)</i><br><b>443 / tcp</b> <i>(HTTPS)</i><br><b>443 / udp</b> <i>(QUIC)</i>"| ingress
 
-  ingress <-->|"<b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| worker
+  ingress -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i>"| manager
 
-  ingress <-->|"<b>2377 / tcp</b> <i>(Swarm Control)</i><br><b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
+  worker -->|"<b>4646 / tcp</b> <i>(Nomad API)</i><br><b>4647 / tcp</b> <i>(Nomad RPC)</i>"| manager
 
-  worker <-->|"<b>2377 / tcp</b> <i>(Swarm Control)</i><br><b>4789 / udp</b> <i>(VXLAN Data)</i><br><b>7946 / tcp</b> <i>(Gossip Control)</i><br><b>7946 / udp</b> <i>(Gossip Discov.)</i>"| manager
+  admin -->|"<b>4646 / tcp</b> <i>(Nomad API)</i>"| manager
 ```
 
 ---
@@ -69,44 +71,12 @@ graph LR
 
 ### 2. Configure the Scripts
 
-- Create a file named `.csi.yml` in `/tmp/cloud-skeleton-prerequisites`; **[Ansible][ansible]** will then deploy it as `/etc/democratic-csi.yml` on each **[Docker Swarm][docker-swarm]** node. This file contains the **[Democratic CSI][democratic-csi]** plugin configuration used for your persistent volumes in the **[Docker Swarm][docker-swarm]** cluster.
-
-  Example for Synology devices behind reverse proxy:
-
-  ```yaml
-  driver: synology-iscsi
-
-  httpConnection:
-    host: <HOSTNAME>
-    password: <PASSWORD>
-    port: 443
-    protocol: https
-    serialize: true
-    session: democratic-csi
-    username: <USERNAME>
-
-  iscsi:
-    baseiqn: iqn.2025-07.<REVERSE DOMAIN>:democratic-csi.
-    lunSnapshotTemplate:
-      is_app_consistent: true
-      is_locked: true
-    lunTemplate:
-      type: BLUN
-    targetPortal: <HOSTNAME>
-    targetTemplate:
-      auth_type: 0
-      max_sessions: 0
-  ```
-
-  **Placeholder explanations:**
-  - `<HOSTNAME>`: the fully qualified domain name or IP address of your Synology NAS (e.g. `nas.domain.com`).  
-  - `<USERNAME>`: the DSM user account (with Storage Manager API privileges) that the CSI driver will authenticate as.  
-  - `<PASSWORD>`: the password for the above DSM user.  
-  - `<REVERSE DOMAIN>`: your NAS’s domain in reverse order (e.g. for `domain.com`, use `com.domain`).  
-
 - Create a file named `.env` in `/tmp/cloud-skeleton-prerequisites` folder with the following content:
 
   ```bash
+  # Enable cluster management mTLS mode
+  ENABLE_CLUSTER_MANAGEMENT_MTLS=false
+
   # Ingress worker node hostnames (space-separated list)
   NODE_INGRESS_WORKERS="ingress-worker-1.cluster.${DOMAIN}"
 
@@ -125,6 +95,18 @@ graph LR
   # DNS nameservers for managers (space-separated list)
   NODE_MANAGERS_NAMESERVERS="9.9.9.9 149.112.112.112"
 
+  # CIDR range of bridge network used in Nomad cluster
+  NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR=10.0.0.0/20
+
+  # Nomad cluster volume NFS share (hostname:/path)
+  NOMAD_CLUSTER_VOLUME_NFS_SHARE=nas.domain.com:/volume1/_Nomad
+
+  # Name of main datacenter for Nomad cluster
+  NOMAD_MAIN_DATACENTER_NAME=home
+
+  # CIDR ranges allowed to connect to Nomad server HTTP endpoints (space-separated list)
+  NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS="127.0.0.1/32"
+
   # SSH private key path (single value)
   SSH_KEY_FILE_PATH=~/.ssh/id_rsa
 
@@ -136,6 +118,9 @@ graph LR
   ```
 
   #### Variable Descriptions
+
+  - **`ENABLE_CLUSTER_MANAGEMENT_MTLS`**  
+    Enable cluster management mTLS mode (all HTTP requests will require client certificate).
 
   - **`NODE_INGRESS_WORKERS`**  
     A space-separated list of ingress-worker hostnames that **[Ansible][ansible]** will target for your public entry point nodes.
@@ -150,10 +135,22 @@ graph LR
     DNS servers to configure on each main-worker node.
 
   - **`NODE_MANAGERS`**  
-    A space-separated list of manager hostnames. These nodes run the **[Docker Swarm][docker-swarm]** manager services.
+    A space-separated list of manager hostnames. These nodes run the **[Hashicorp Nomad][hashicorp-nomad]** manager services.
 
   - **`NODE_MANAGERS_NAMESERVERS`**  
     DNS servers to configure on each manager node.
+
+  - **`NOMAD_CLUSTER_BRIDGE_NETWORK_CIDR`**  
+    CIDR range of bridge network used in Nomad cluster.
+
+  - **`NOMAD_CLUSTER_VOLUME_NFS_SHARE`**  
+    Nomad cluster volume NFS share (hostname/path).
+
+  - **`NOMAD_MAIN_DATACENTER_NAME`**  
+    Name of main datacenter for Nomad cluster.
+
+  - **`NOMAD_SERVER_HTTP_ALLOW_IP_CIDRS`**  
+    A space-separated list of CIDR ranges allowed to connect to Nomad server HTTP endpoints.
 
   - **`SSH_KEY_FILE_PATH`**  
     Path (absolute or relative) to the **[SSH][ssh]** private key file used by **[Ansible][ansible]** to connect to all nodes.
@@ -239,14 +236,10 @@ uv run ansible all -m ping
 Once connectivity is confirmed, run your main playbook to configure all prerequisites:
 
 ```bash
-uv run ansible-playbook playbooks/main.yml --diff
+uv run ansible-playbook playbooks/main.yml
 ```
 
 > **Tip:**  
-> - You can add `--check` to perform a dry-run without making changes:
->   ```bash
->   uv run ansible-playbook playbooks/main.yml --check --diff
->   ```  
 > - If you need extra debugging information, include one or more `-v` flags (`-vvv` for maximum verbosity).
 
 ---
@@ -269,14 +262,9 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 <!-- Reference -->
 [ansible]: https://docs.ansible.com/ansible/latest/getting_started/index.html
 [cloud-skeleton]: https://github.com/cloud-skeleton/  
-[curl]: https://everything.curl.dev/  
-[democratic-csi]: https://github.com/democratic-csi/democratic-csi/tree/master/examples
-[docker]: https://docs.docker.com/get-started/  
-[docker-compose]: https://docs.docker.com/compose/gettingstarted/  
-[docker-swarm]: https://docs.docker.com/engine/swarm/  
+[hashicorp-nomad]: https://developer.hashicorp.com/nomad/tutorials/get-started 
 [git]: https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup  
 [git-lfs]: https://github.com/git-lfs/git-lfs/wiki/Tutorial  
-[nfs]: https://www.techtarget.com/searchenterprisedesktop/definition/Network-File-System  
 [prerequisites]: https://github.com/cloud-skeleton/prerequisites/  
 [ssh]: https://www.openssh.com/manual.html  
 [traefik]: https://doc.traefik.io/traefik/
