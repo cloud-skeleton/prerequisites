@@ -262,14 +262,9 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 <!-- Reference -->
 [ansible]: https://docs.ansible.com/ansible/latest/getting_started/index.html
 [cloud-skeleton]: https://github.com/cloud-skeleton/  
-[curl]: https://everything.curl.dev/  
-[democratic-csi]: https://github.com/democratic-csi/democratic-csi/tree/master/examples
-[docker]: https://docs.docker.com/get-started/  
-[docker-compose]: https://docs.docker.com/compose/gettingstarted/  
 [hashicorp-nomad]: https://developer.hashicorp.com/nomad/tutorials/get-started 
 [git]: https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup  
 [git-lfs]: https://github.com/git-lfs/git-lfs/wiki/Tutorial  
-[nfs]: https://www.techtarget.com/searchenterprisedesktop/definition/Network-File-System  
 [prerequisites]: https://github.com/cloud-skeleton/prerequisites/  
 [ssh]: https://www.openssh.com/manual.html  
 [traefik]: https://doc.traefik.io/traefik/
