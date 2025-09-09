@@ -65,6 +65,7 @@ server {
   bootstrap_expect = {{ groups['manager'] | length }}
   enabled          = true
   encrypt          = "{{ hostvars[groups['manager'][0]]['nomad_encryption_string'] }}"
+  job_gc_threshold = "168h"
 
   plan_rejection_tracker {
     enabled = true
