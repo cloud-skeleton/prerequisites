@@ -1,0 +1,29 @@
+---
+- ansible.builtin.blockinfile:
+    block: shopt -s huponexit
+    group: ansible
+    marker: "# {mark} AUTOMATED PROCESS KILL"
+    mode: '0640'
+    owner: ansible
+    path: /home/ansible/.bashrc
+  name: Enable automated kill of processes on shell exit
+
+- ansible.builtin.copy:
+    content: |
+      # Proactively detect dead clients and close sessions (~30 minutes)
+      ClientAliveInterval 60
+      ClientAliveCountMax 30
+      TCPKeepAlive yes
+    dest: /etc/ssh/sshd_config.d/99-keepalive.conf
+    group: root
+    mode: '0640'
+    owner: root
+  name: Enable SSH keepalive
+  register: enable_ssh_keepalive
+
+- ansible.builtin.service:
+    name: ssh
+    state: reloaded
+  name: Restart sshd if keepalive config has been changed
+  when: enable_ssh_keepalive.changed
+...

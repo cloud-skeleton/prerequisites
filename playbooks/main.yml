@@ -10,4 +10,5 @@
     - setup_firewall
     - setup_docker
     - setup_nomad_cluster
+    - extra_tweaks
 ...
