@@ -82,12 +82,11 @@ server {
 }
 {% endif %}
 
-{% if 'manager' not in group_names %}
 telemetry {
   // https://github.com/hashicorp/nomad/issues/26329#issuecomment-3109577687
   publish_allocation_metrics = true
+  publish_node_metrics       = true
 }
-{% endif %}
 
 tls {
   ca_file                = "{{ certificate_files.ca_certificate }}"
