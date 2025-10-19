@@ -51,6 +51,11 @@ enable_syslog               = true
 {% if 'manager' not in group_names %}
 plugin "docker" {
   config {
+    allow_caps = [
+      "audit_write", "chown", "dac_override", "fowner", "fsetid", "kill", "mknod",
+      "net_bind_service", "net_raw", "setfcap", "setgid", "setpcap", "setuid", "sys_chroot"
+    ]
+
     allow_privileged = true
 
     volumes {
