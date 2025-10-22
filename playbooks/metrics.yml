@@ -1,0 +1,7 @@
+---
+- become: true
+  hosts: all
+  name: Configure Nomad to expose Prometheus endpoint
+  roles:
+    - configure_metrics
+...

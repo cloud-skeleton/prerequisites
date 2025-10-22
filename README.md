@@ -244,6 +244,12 @@ uv run ansible-playbook playbooks/main.yml
 
 ---
 
+## Additional Playbooks
+
+| File          | Description                                                                            |
+|---------------|----------------------------------------------------------------------------------------|
+| `metrics.yml` | Configure **[Nomad][hashicorp-nomad]** to expose **[Prometheus][prometheus]** endpoint |
+
 ## Contributing
 
 Contributions and improvements to this installation script are welcome!  
@@ -266,6 +272,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 [git]: https://git-scm.com/book/ms/v2/Getting-Started-First-Time-Git-Setup  
 [git-lfs]: https://github.com/git-lfs/git-lfs/wiki/Tutorial  
 [prerequisites]: https://github.com/cloud-skeleton/prerequisites/  
+[prometheus]: https://prometheus.io/docs/prometheus/latest/getting_started/
 [ssh]: https://www.openssh.com/manual.html  
 [traefik]: https://doc.traefik.io/traefik/
 [uv]: https://docs.astral.sh/uv/getting-started/
