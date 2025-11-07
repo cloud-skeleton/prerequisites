@@ -21,7 +21,7 @@
 
   - ansible.builtin.file:
       group: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
-      mode: '0750'
+      mode: '0755'
       owner: "{{ 'nomad' if 'manager' in group_names else 'root' }}"
       path: "{{ certificate.path }}"
     name: Set certificate file properties
