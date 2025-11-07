@@ -109,6 +109,38 @@
     proto: "{{ rule[1] }}"
   when: "'ingress_worker' in group_names"
 
+- ansible.builtin.set_fact:
+    main_worker_ips: >-
+      {{
+        groups['main_worker']
+        | map('extract', hostvars, 'ansible_default_ipv4')
+        | map(attribute='address')
+        | flatten
+      }}
+  name: Set main worker IP list
+  when: "'ingress_worker' in group_names"
+
+- community.general.ufw:
+    from_ip: "{{ ip }}"
+    log: true
+    proto: tcp
+    rule: allow
+    to_port: 4646
+  loop: "{{ main_worker_ips }}"
+  loop_control:
+    loop_var: ip
+  name: Allow Nomad main worker to ingress worker HTTP port (for metrics endpoint scraping)
+  when: "'ingress_worker' in group_names"
+
+- community.general.ufw:
+    from_ip: "{{ nomad_cluster_bridge_network_cidr }}"
+    log: true
+    proto: tcp
+    rule: allow
+    to_port: 4646
+  name: Allow Nomad local bridge network to HTTP port (for metrics endpoint scraping)
+  when: "'main_worker' in group_names"
+
 - ansible.builtin.get_url:
     dest: /etc/apt/keyrings/hashicorp.asc
     force: true

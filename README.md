@@ -248,7 +248,6 @@ uv run ansible-playbook playbooks/main.yml
 
 | File          | Description                                                                            |
 |---------------|----------------------------------------------------------------------------------------|
-| `metrics.yml` | Configure **[Nomad][hashicorp-nomad]** to expose **[Prometheus][prometheus]** endpoint |
 
 ## Contributing
 
