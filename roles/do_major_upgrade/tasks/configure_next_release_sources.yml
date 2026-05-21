@@ -1,0 +1,22 @@
+---
+- ansible.builtin.replace:
+    path: /etc/apt/sources.list
+    regexp: "\\b{{ current_release }}\\b"
+    replace: "{{ next_release }}"
+  name: Update main APT sources list to next Debian release
+
+- ansible.builtin.find:
+    file_type: file
+    paths: /etc/apt/sources.list.d
+    patterns:
+      - "*.list"
+  name: Find extra APT source files
+  register: apt_source_files
+
+- ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: "\\b{{ current_release }}\\b"
+    replace: "{{ next_release }}"
+  loop: "{{ apt_source_files.files }}"
+  name: Update extra APT source files to next Debian release
+...

@@ -248,6 +248,7 @@ uv run ansible-playbook playbooks/main.yml
 
 | File          | Description                                                                            |
 |---------------|----------------------------------------------------------------------------------------|
+| `upgrade.yml` | Upgrade nodes to the next released major version                                       |
 
 ## Contributing
 

@@ -1,0 +1,52 @@
+---
+- ansible.builtin.set_fact:
+    next_major_version: "{{ current_major_version | int + 1 }}"
+  name: Calculate next Debian major version
+
+- ansible.builtin.uri:
+    return_content: true
+    url: https://debian.pages.debian.net/distro-info-data/debian.csv
+  name: Fetch Debian release metadata
+  register: debian_releases
+
+- ansible.builtin.set_fact:
+    next_release_row: >-
+      {{
+        debian_releases.content.splitlines()
+        | select('match', '^' ~ next_major_version ~ ',')
+        | first
+        | default('')
+      }}
+  name: Find next Debian release row
+
+- ansible.builtin.fail:
+    msg: >-
+      Could not find Debian release metadata for version {{ next_major_version }}.
+      Current version is {{ current_version }} / {{ current_release }}.
+  name: Fail if next Debian release could not be found
+  when: next_release_row == ""
+
+- ansible.builtin.set_fact:
+    next_release_date: "{{ next_release_row.split(',')[4] }}"
+  name: Get next Debian release date
+
+- ansible.builtin.fail:
+    msg: >-
+      Debian {{ next_major_version }} exists in release metadata, but does not
+      appear to be released yet. Release date field is empty.
+  name: Fail if next Debian release has no release date
+  when: next_release_date == ""
+
+- ansible.builtin.fail:
+    msg: >-
+      Debian {{ next_major_version }} exists in release metadata, but release
+      date is {{ next_release_date }}, which is in the future.
+      Today is {{ now(utc=true, fmt='%Y-%m-%d') }}.
+  name: Fail if next Debian release date is in the future
+  when: next_release_date > now(utc=true, fmt='%Y-%m-%d')
+
+- ansible.builtin.set_fact:
+    next_release: "{{ next_release_row.split(',')[2] }}"
+    next_version: "{{ next_release_row.split(',')[0] }}"
+  name: Get next Debian version
+...

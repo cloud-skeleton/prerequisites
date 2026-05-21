@@ -1,0 +1,30 @@
+---
+- ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    clean: true
+    install_recommends: true
+    purge: true
+    update_cache: true
+    upgrade: full
+  name: Perform major Debian upgrade
+
+- ansible.builtin.reboot:
+  name: Reboot after major Debian upgrade
+
+- ansible.builtin.setup:
+  name: Refresh facts after reboot
+
+- ansible.builtin.fail:
+    msg: >-
+      Debian major upgrade failed or facts are stale.
+      Expected {{ next_release }}, got {{ ansible_distribution_release }}.
+  name: Fail if host is not running next Debian release
+  when: ansible_distribution_release != next_release
+
+- ansible.builtin.debug:
+    msg: >-
+      Successfully upgraded from Debian {{ current_version }} {{ current_release }}
+      to Debian {{ ansible_distribution_version }} {{ ansible_distribution_release }}.
+  name: Show successful Debian upgrade
+...

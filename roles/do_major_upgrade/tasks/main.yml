@@ -1,0 +1,9 @@
+---
+- ansible.builtin.import_tasks: get_current_version.yml
+
+- ansible.builtin.import_tasks: get_next_version.yml
+
+- ansible.builtin.import_tasks: configure_next_release_sources.yml
+
+- ansible.builtin.import_tasks: upgrade_to_next_release.yml
+...
