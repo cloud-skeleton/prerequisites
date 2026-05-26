@@ -246,9 +246,10 @@ uv run ansible-playbook playbooks/main.yml
 
 ## Additional Playbooks
 
-| File          | Description                                                                            |
-|---------------|----------------------------------------------------------------------------------------|
-| `upgrade.yml` | Upgrade nodes to the next released major version                                       |
+| File          | Description                                      |
+|---------------|--------------------------------------------------|
+| `update.yml`  | Update all packages on all nodes                 |
+| `upgrade.yml` | Upgrade nodes to the next released major version |
 
 ## Contributing
 

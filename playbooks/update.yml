@@ -1,0 +1,7 @@
+---
+- become: true
+  hosts: all
+  name: Update all nodes
+  roles:
+    - upgrade_system
+...
